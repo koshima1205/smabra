@@ -66,13 +66,16 @@ export class Camera {
       r = Math.max(r, mid + half * 0.45);
       b = Math.max(b, stage.main.y + 40);
       t = Math.min(t, stage.main.y - 240);
-      const padX = 230;
+      // 縦長画面（スマホ縦持ち）は横幅を詰めて寄る
+      const narrow = this.viewW < this.viewH;
+      const minW = narrow ? 560 : 860;
+      const padX = narrow ? 120 : 230;
       const padY = 170;
-      const w = Math.max(r - l + padX * 2, 860);
-      const h = Math.max(b - t + padY * 2, 500);
+      const w = Math.max(r - l + padX * 2, minW);
+      const h = Math.max(b - t + padY * 2, narrow ? 300 : 500);
       const maxW = (stage.blast.r - stage.blast.l) * 0.92;
       const maxH = (stage.blast.b - stage.blast.t) * 0.92;
-      const z = clamp(this.fitZoom(Math.min(w, maxW), Math.min(h, maxH)), this.fitZoom(maxW, maxH), this.fitZoom(860, 484));
+      const z = clamp(this.fitZoom(Math.min(w, maxW), Math.min(h, maxH)), this.fitZoom(maxW, maxH), this.fitZoom(minW, minW * 0.5625));
       let cx = (l + r) / 2;
       let cy = (t + b) / 2 + 20;
       // ブラストゾーンの外は映しすぎない

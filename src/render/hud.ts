@@ -37,16 +37,17 @@ export function damageColor(d: number): string {
 
 export function drawHud(ctx: CanvasRenderingContext2D, m: Match, players: HudPlayer[], w: number, h: number, time: number): void {
   const n = players.length;
-  const pw = Math.min(250, (w - 40) / n - 12);
-  const ph = 92;
-  const total = n * pw + (n - 1) * 14;
+  // 画面が低いときは HUD を小さく
+  const sc = Math.min(1, (w - 40) / (n * 264), Math.max(0.55, h / 640));
+  const pw = 250 * sc;
+  const ph = 92 * sc;
+  const total = n * pw + (n - 1) * 14 * sc;
   const x0 = (w - total) / 2;
-  const y0 = h - ph - 14;
-  const sc = pw / 250;
+  const y0 = h - ph - 12 * sc;
 
   players.forEach((p, i) => {
     const f = p.f;
-    const x = x0 + i * (pw + 14);
+    const x = x0 + i * (pw + 14 * sc);
     ctx.save();
     ctx.translate(x, y0);
     ctx.scale(sc, sc);

@@ -66,7 +66,8 @@ export function showTouch(root: HTMLElement, onPause: () => void): void {
     btn('つかみ', 'grab', 0, 150),
   );
   const pause = h('button', { class: 'pause-btn', onclick: onPause }, 'Ⅱ');
-  root.append(stick, btns, pause);
+  const rotate = h('div', { class: 'rotate-hint' }, '横向きにすると遊びやすいです');
+  root.append(stick, btns, pause, rotate);
 }
 
 export function hideTouch(root: HTMLElement): void {

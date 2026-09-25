@@ -135,6 +135,46 @@ export class App {
       { kind: 'off', devices: new Set(), fighterId: null, cpuLevel: 5, locked: true, cursor: 3 },
     ];
     this.touchCapable = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    this.load();
+  }
+
+  private static KEY = 'ninja-ranbu:v1';
+
+  /** 前回のルールと選択を復元（ブラウザのストレージが使えなければ何もしない） */
+  private load(): void {
+    try {
+      const raw = localStorage.getItem(App.KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw) as { rules?: Partial<MatchRules>; slots?: { kind: SlotKind; fighterId: string | null; cpuLevel: number }[]; stage?: string };
+      if (d.rules) {
+        this.rules.stocks = Math.max(1, Math.min(5, Number(d.rules.stocks) || 3));
+        this.rules.time = [0, 120, 180, 300, 420].includes(Number(d.rules.time)) ? Number(d.rules.time) : 0;
+      }
+      if (typeof d.stage === 'string') this.lastStage = d.stage;
+      d.slots?.slice(0, 4).forEach((s, i) => {
+        const slot = this.slots[i];
+        if (i > 0 && (s.kind === 'cpu' || s.kind === 'off')) slot.kind = s.kind;
+        slot.fighterId = typeof s.fighterId === 'string' ? s.fighterId : null;
+        slot.cpuLevel = Math.max(1, Math.min(9, Number(s.cpuLevel) || 5));
+      });
+    } catch {
+      /* 保存なしで続行 */
+    }
+  }
+
+  save(): void {
+    try {
+      localStorage.setItem(
+        App.KEY,
+        JSON.stringify({
+          rules: this.rules,
+          stage: this.lastStage,
+          slots: this.slots.map((s) => ({ kind: s.kind, fighterId: s.fighterId, cpuLevel: s.cpuLevel })),
+        }),
+      );
+    } catch {
+      /* 保存できなくても遊べる */
+    }
   }
 
   go(scene: Scene): void {

@@ -76,6 +76,7 @@ export class StageScene implements Scene {
     const id = this.focus >= STAGES.length ? STAGES[Math.floor(Math.random() * STAGES.length)].id : STAGES[this.focus].id;
     this.app.rules.stageId = id;
     this.app.lastStage = id;
+    this.app.save();
     sfx('uiSelect');
     this.app.go(new BattleScene(this.app));
   }

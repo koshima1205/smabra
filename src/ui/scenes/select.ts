@@ -325,7 +325,7 @@ export class SelectScene implements Scene {
         h(
           'div',
           { class: 'lv' },
-          'つよさ',
+          h('span', { class: 'lv-label' }, 'つよさ'),
           h('button', { onclick: (e: Event) => (e.stopPropagation(), this.level(i, -1)), 'aria-label': 'CPUを弱く' }, '−'),
           `Lv${s.cpuLevel}`,
           h('button', { onclick: (e: Event) => (e.stopPropagation(), this.level(i, 1)), 'aria-label': 'CPUを強く' }, '＋'),

@@ -382,8 +382,8 @@ export class Match {
       return 'hit';
     }
     const dmg = dmgBase * att.buffMul;
-    if (!att.move?.final) att.meter = Math.min(100, att.meter + dmg * 0.55);
-    t.meter = Math.min(100, t.meter + dmg * 0.35);
+    if (!att.move?.final) att.meter = Math.min(100, att.meter + dmg * 0.4);
+    t.meter = Math.min(100, t.meter + dmg * 0.22);
     t.damage = Math.min(K.MAX_DAMAGE, t.damage + dmg);
     t.taken += dmg;
     att.dealt += dmg;
