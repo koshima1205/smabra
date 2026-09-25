@@ -712,7 +712,8 @@ export function drawFighter(ctx: CanvasRenderingContext2D, f: Fighter, o: DrawOp
   }
 
   let alpha = 1;
-  if (f.state === 'attack' && f.move?.teleport && f.intang > 0) alpha = 0.15;
+  if (f.state === 'attack' && f.move?.final) alpha = 1;
+  else if (f.state === 'attack' && f.move?.teleport && f.intang > 0) alpha = 0.15;
   else if (f.intang > 0 && f.state !== 'ledge') alpha = 0.55 + 0.25 * Math.sin(time * 0.9);
   if (f.respawnInv > 0 && f.state !== 'respawn') alpha = Math.floor(time / 4) % 2 ? 0.45 : 0.9;
 

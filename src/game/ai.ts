@@ -199,6 +199,11 @@ export class CpuBrain implements Brain {
     const actionable = ['idle', 'walk', 'dash', 'run', 'crouch', 'land', 'air', 'tumble', 'shield', 'skid'].includes(me.state);
     if (!actionable) return;
 
+    // 奥義: ゲージが溜まっていて相手が射程内なら撃つ
+    if (me.meter >= 100 && dist < 360 && Math.abs(dy) < 260 && this.chance(0.04 + lv * 0.02)) {
+      this.queue.push({ n: 1, pad: { special: true } }, { n: 20, pad: {} });
+      return;
+    }
     // 危険: 近くで相手が攻撃中 → ガード / 回避
     const threat = t.state === 'attack' && t.move && dist < 150 && Math.abs(dy) < 120 && t.mf < (t.move.hitboxes[0]?.f0 ?? 0) + 2;
     if (threat && me.grounded && this.chance(0.08 * lv)) {

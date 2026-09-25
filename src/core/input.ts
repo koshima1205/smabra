@@ -168,7 +168,13 @@ export class InputManager {
       }
       if (isActive(s)) this.kbUsed.add(id);
     }
-    const pads = typeof navigator !== 'undefined' && navigator.getGamepads ? navigator.getGamepads() : [];
+    let pads: (Gamepad | null)[] = [];
+    try {
+      // iframe の権限ポリシーで禁止されていると例外になる
+      if (typeof navigator !== 'undefined' && navigator.getGamepads) pads = [...navigator.getGamepads()];
+    } catch {
+      pads = [];
+    }
     for (const gp of pads) {
       if (!gp || !gp.connected) continue;
       const id = `pad${gp.index}`;

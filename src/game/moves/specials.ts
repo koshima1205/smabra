@@ -389,7 +389,13 @@ export function buildSpecials(kind: JutsuKind, seed: number): SpecialSet {
       extra.darkBurst = counterHit('幻術・漆黒返し', 'dark', 11);
       return set(
         shoot('幻術・漆黒球', 'dark', orb('dark', { vx: 5, r: 20, life: 100, homing: 0.03, maxAlive: 1, dmg: 10 }), { f: 16, frames: 44 }),
-        blink('幻術・幻影歩法', 'dark', { dist: 190, dmg: 6 }),
+        (() => {
+          // 横移動のすり抜けはしりもち落下にしない（空中では1回まで）
+          const side = blink('幻術・幻影歩法', 'dark', { dist: 190, dmg: 6 });
+          side.helpless = false;
+          side.airLimit = true;
+          return side;
+        })(),
         blink('幻術・霧隠れ', 'dark', { dist: 250, dmg: 4 }),
         counter('幻術・闇夜の帳', 'dark', 'darkBurst'),
       );

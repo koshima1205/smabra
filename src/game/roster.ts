@@ -256,9 +256,12 @@ function lookFor(e: RosterEntry, weapon: WeaponKind, auraFx: string, h: number):
   const abyss = e.clan === '根の国';
   const old = n.includes('爺') || n === '石舟斎';
   const hair = old ? '#e9e9ef' : heaven ? '#fff0c2' : abyss ? '#d9d2ea' : HAIRS[(h >>> 5) % HAIRS.length];
+  // 忍装束の色: 暗めを基本に、キャラごとに彩度・明るさを散らす
+  const sat = 24 + ((h >>> 17) & 15) * 1.4;
+  const lit = 17 + ((h >>> 21) & 15) * 1.1;
   return {
-    body: heaven ? '#f4efe4' : abyss ? hsl(hue, 30, 14) : hsl(hue, 28, 22),
-    body2: heaven ? '#d9cfb8' : abyss ? hsl(hue, 34, 9) : hsl(hue, 30, 15),
+    body: heaven ? '#f4efe4' : abyss ? hsl(hue, 30, 14) : hsl(hue, sat, lit),
+    body2: heaven ? '#d9cfb8' : abyss ? hsl(hue, 34, 9) : hsl(hue, sat + 4, lit - 7),
     accent: heaven ? '#e2b34a' : hsl((hue + 150) % 360, 70, 58),
     scarf: clan,
     skin: abyss ? '#cfc6e0' : heaven ? '#fff1dc' : SKINS[(h >>> 9) % SKINS.length],
