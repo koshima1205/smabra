@@ -44,12 +44,27 @@ body {
   inset: 0;
 }
 
+#world,
 #game {
   position: absolute;
   inset: 0;
   display: block;
   width: 100%;
   height: 100%;
+}
+
+#world {
+  background: #0b0a14;
+}
+
+.portrait-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 900 48px 'Yuji Syuku', serif;
+  color: #fff;
+  background: radial-gradient(circle at 35% 30%, #fff6e0, var(--c, #666));
 }
 
 #ui {
@@ -380,8 +395,9 @@ kbd {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
-  gap: 7px;
+  grid-template-columns: repeat(5, minmax(0, 150px));
+  justify-content: center;
+  gap: 10px;
 }
 
 .card {
@@ -569,6 +585,41 @@ kbd {
   font-size: 11.5px;
   color: #d8d2ee;
   line-height: 1.45;
+}
+
+.slot .partner {
+  font-size: 10.5px;
+  color: #bfb6e0;
+  line-height: 1.4;
+}
+
+.slot .partner .mcp,
+.modal .mcp {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #0d0b1a;
+  background: #7fe3c0;
+}
+
+.card .nm small {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.topbar .sub-title {
+  font-size: 12px;
+  color: #bfb6e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .slot .tags {

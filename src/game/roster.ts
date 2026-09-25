@@ -1,105 +1,25 @@
-import { hash32, hsl } from '../core/math';
+import { CNP, type CnpDef } from '../data/cnp';
 import data from '../data/roster.generated.json';
-import { hb, mv, scaleMove } from './moves/dsl';
+import type { CnpId } from '../render3d/types';
+import { hb, hit, mv, powerMove, proj, scaleMove, shiftMove } from './moves/dsl';
 import { buildNormals, styleOf } from './moves/normals';
-import { buildSpecials } from './moves/specials';
-import type { Effect, FighterSpec, FighterStats, JutsuKind, Look, MoveDef, MoveSlot, Ratings, WeaponKind } from './types';
+import { buildSpecials, charger, counter, counterHit, fly, lunge, rise, shoot, slam, type SpecialSet } from './moves/specials';
+import type { Effect, FighterSpec, FighterStats, JutsuKind, MoveDef, MoveSlot, PartnerNinja, Ratings, WeaponKind } from './types';
 
-/** MCP（NINJAMCP）から同期した生データ */
-export interface RosterEntry {
-  id: string;
-  name: string;
-  nameEn: string;
-  clan: string;
-  ninjutsu: string | null;
-  ninjutsuEn: string | null;
-  weapon: string | null;
-  weaponEn: string | null;
-  birthday: string | null;
-  image: string | null;
-  image3d: string | null;
-}
-
+/** MCP（NINJAMCP）から同期したメタ情報 */
 export const ROSTER_META = {
   mcp: data.mcp,
   credit: data.credit,
   clans: data.clans,
 };
 
-const WEAPON_MAP: Record<string, WeaponKind> = {
-  手裏剣: 'shuriken',
-  毒手裏剣: 'shuriken',
-  刀: 'katana',
-  正宗: 'katana',
-  妖刀村正: 'katana',
-  大典太: 'katana',
-  閃光刀: 'lasersword',
-  牛刀: 'bigblade',
-  匕首: 'dagger',
-  鉤爪: 'claw',
-  空手: 'fist',
-  拳: 'fist',
-  太極拳: 'fist',
-  巻物: 'scroll',
-  毒矢: 'bow',
-  団子: 'dango',
-  焙烙玉: 'bomb',
-  棍棒: 'club',
-  鷹: 'falcon',
-  護符: 'talisman',
-  呪符: 'talisman',
-  数珠: 'beads',
-  円光: 'halo',
-  三味線: 'shamisen',
-  鎖鎌: 'chain',
-  筆: 'brush',
-  絵筆: 'brush',
-  羽: 'wings',
-  木槌: 'mallet',
-  鬼火: 'onibi',
-  銃: 'gun',
-  笈: 'box',
-  なし: 'spirit',
-};
+interface PartnerEntry {
+  cnp: string;
+  loreMention: string[];
+  ninja: PartnerNinja;
+}
 
-const JUTSU_MAP: Record<string, JutsuKind> = {
-  火遁: 'katon',
-  水遁: 'suiton',
-  風遁: 'fuuton',
-  雷遁: 'raiton',
-  金遁: 'kinton',
-  閃光: 'laser',
-  毒霧: 'poisonMist',
-  毒手裏剣: 'poisonStar',
-  口寄せ: 'kuchiyose',
-  影分身: 'kagebunshin',
-  影分身の術: 'kagebunshin',
-  変わり身: 'kawarimi',
-  影縫い: 'kagenui',
-  '幻術・漆黒': 'illusion',
-  桜吹雪: 'sakura',
-  人身御供: 'sacrifice',
-  涅槃: 'nirvana',
-  祝詞: 'mantra',
-  '領域・罪業': 'realm',
-  忍びいろは: 'iroha',
-  動植綵絵: 'paint',
-  鷹の目: 'hawkeye',
-  九尾の焔: 'foxfire',
-  巨人の一撃: 'titan',
-  野アザミ: 'thistle',
-  丑の刻参り: 'curse',
-  猫の目の選択: 'catseye',
-  一発必中: 'sniper',
-  泰山府君祭: 'ritual',
-  糸脈: 'thread',
-  飯綱の法: 'izuna',
-  無刀取り: 'mutodori',
-  逢魔刻: 'omen',
-};
-
-/** 未知の忍術（MCP 側に新キャラが増えた場合）の割り当て候補 */
-const FALLBACK_JUTSU: JutsuKind[] = ['katon', 'suiton', 'fuuton', 'raiton', 'kagebunshin', 'kawarimi', 'sakura', 'kagenui'];
+const PARTNERS = new Map<string, PartnerEntry>((data.partners as PartnerEntry[]).map((p) => [p.cnp, p]));
 
 export const CLAN_COLOR: Record<string, string> = {
   伊賀: '#e0443a',
@@ -109,10 +29,6 @@ export const CLAN_COLOR: Record<string, string> = {
   天界: '#f2c14e',
   根の国: '#b0204a',
 };
-
-const HEAVY: WeaponKind[] = ['club', 'mallet', 'bigblade', 'box'];
-const LIGHT: WeaponKind[] = ['dagger', 'claw', 'shuriken', 'fist'];
-const BLADES: WeaponKind[] = ['katana', 'lasersword', 'bigblade', 'dagger', 'claw'];
 
 const BASE: FighterStats = {
   weight: 100,
@@ -135,153 +51,173 @@ const BASE: FighterStats = {
   scale: 1,
 };
 
-function jitter(h: number, shift: number, amount: number): number {
-  return (((h >>> shift) & 0xff) / 255 - 0.5) * 2 * amount;
+/**
+ * キャラごとの設計。
+ * weapon / jutsu は基本的にパートナーの忍者（MCP）の得物・忍術から。種族に合わない場合だけ置き換える。
+ */
+interface Design {
+  weapon: WeaponKind;
+  /** 通常ワザの名前に付ける得物名 */
+  weaponName: string;
+  jutsu: JutsuKind;
+  fx: Effect;
+  stats: Partial<FighterStats>;
+  /** 必殺ワザ（パートナーの忍術のセットを使わない場合） */
+  specials?: (seed: number) => SpecialSet;
+  /** 必殺ワザの名前の付け替え */
+  rename?: Partial<Record<'nspec' | 'sspec' | 'uspec' | 'dspec', string>>;
+  /** 性能の微調整（CPU 同士の総当たりで勝率が偏りすぎないように） */
+  tune?: (m: Record<MoveSlot, MoveDef>) => void;
+  finalName: string;
 }
 
-function statsFor(e: RosterEntry, weapon: WeaponKind, h: number): FighterStats {
-  const s = { ...BASE };
-  if (HEAVY.includes(weapon)) {
-    s.weight += 16;
-    s.run -= 0.9;
-    s.walk -= 0.3;
-    s.jumpV -= 0.6;
-    s.scale = 1.08;
-  }
-  if (LIGHT.includes(weapon)) {
-    s.weight -= 8;
-    s.run += 0.6;
-    s.airSpeed += 0.2;
-  }
-  if (weapon === 'wings') {
-    s.airJumps = 2;
-    s.gravity -= 0.06;
-    s.weight -= 10;
-    s.airSpeed += 0.3;
-  }
-  switch (e.clan) {
-    case '伊賀':
-      s.run += 0.4;
-      break;
-    case '甲賀':
-      s.airJumpV += 0.6;
-      break;
-    case '風魔':
-      s.weight += 6;
-      break;
-    case '雑賀':
-      s.airAccel += 0.03;
-      break;
-    case '天界':
-      s.gravity -= 0.1;
-      s.maxFall -= 2;
-      s.weight -= 10;
-      s.airJumps += 1;
-      break;
-    case '根の国':
-      s.weight += 10;
-      s.gravity += 0.04;
-      s.maxFall += 1;
-      break;
-  }
-  const n = e.name;
-  if (n.includes('爺') || n === '石舟斎') {
-    s.weight += 8;
-    s.run -= 0.7;
-    s.jumpV -= 0.4;
-  }
-  if (['アウン', 'アトザ', 'コンガ'].includes(n)) {
-    s.scale = 1.16;
-    s.weight += 20;
-    s.run -= 0.6;
-  }
-  if (n.includes('兎')) {
-    s.jumpV += 1.2;
-    s.airJumpV += 1;
-  }
-  if (n.includes('猫') || n === '久遠') {
-    s.run += 0.6;
-    s.traction -= 0.05;
-  }
-  if (n.includes('柴')) s.run += 0.8;
-  s.weight = Math.round(s.weight + jitter(h, 0, 4));
-  s.run += jitter(h, 8, 0.3);
-  s.airSpeed += jitter(h, 16, 0.2);
-  s.dashInit = s.run + 0.8;
-  s.width = Math.round(54 * s.scale);
-  s.height = Math.round(100 * s.scale);
-  s.fastFall = s.maxFall * 1.5;
-  s.shortHopV = s.jumpV * 0.66;
-  return s;
-}
+const SMASHES: MoveSlot[] = ['fsmash', 'usmash', 'dsmash'];
+const AERIALS: MoveSlot[] = ['nair', 'fair', 'bair', 'uair', 'dair'];
 
-const SKINS = ['#f6d7b8', '#eec29c', '#d9a77f', '#f3e0cf', '#e8b98f'];
-const HAIRS = ['#1e1e28', '#5a3a22', '#2d4f8a', '#b33a3a', '#e8e2d0', '#f0c85a', '#e58bb8', '#3c6e4a'];
-const STYLES: Look['hairStyle'][] = ['spiky', 'long', 'bun', 'short', 'twin', 'hood'];
-
-const WEAPON_COLOR: Partial<Record<WeaponKind, string>> = {
-  katana: '#dfe8f2',
-  lasersword: '#8ff6ff',
-  bigblade: '#c9d2dc',
-  dagger: '#d9e0ea',
-  claw: '#b8c0cc',
-  shuriken: '#aab4c4',
-  club: '#7a5234',
-  mallet: '#8b5e3c',
-  box: '#9a6b3f',
-  gun: '#3a3a44',
-  bow: '#8a5a2b',
-  chain: '#9aa3ad',
-  dango: '#f2c6d8',
-  bomb: '#2b2b33',
-  scroll: '#f2e6c8',
-  brush: '#3a2a1a',
-  talisman: '#fff4d6',
-  beads: '#6b3f8a',
-  halo: '#ffe28a',
-  shamisen: '#6a3b1f',
-  onibi: '#7fd0ff',
-  falcon: '#8a6a4a',
-  wings: '#f4f0ff',
-  fist: '#e8e0d0',
-  spirit: '#ffcf8a',
-  abyss: '#3a1030',
+const DESIGN: Record<CnpId, Design> = {
+  // パンダ: シャオランの太極拳 × 巨大化する力（MCP の設定）
+  leelee: {
+    weapon: 'fist',
+    weaponName: '太極拳',
+    jutsu: 'titan',
+    fx: 'metal',
+    stats: { weight: 128, run: 7.3, walk: 3.1, jumpV: 15.4, airJumpV: 14.4, gravity: 0.66, maxFall: 11.5, airSpeed: 4.8, width: 66, height: 100, scale: 1.1 },
+    tune: (m) => {
+      for (const k of [...SMASHES, 'ftilt', 'fair'] as MoveSlot[]) powerMove(m[k], 1.14, 3);
+    },
+    rename: { nspec: '巨大化パンチ', sspec: 'パンダ突進', uspec: '竹林大跳躍', dspec: 'パンダ・大地割り' },
+    finalName: '奥義・巨大化',
+  },
+  // おばけ: 瀬織の木槌 × 丑の刻参り
+  mitama: {
+    weapon: 'mallet',
+    weaponName: '木槌',
+    jutsu: 'curse',
+    fx: 'dark',
+    stats: { weight: 76, gravity: 0.49, maxFall: 8.8, run: 7.0, walk: 3.2, airSpeed: 5.2, airAccel: 0.5, jumpV: 14.5, airJumpV: 13.2, airJumps: 3, width: 50, height: 84, scale: 0.95 },
+    tune: (m) => {
+      for (const k of SMASHES) powerMove(m[k], 0.88, -6);
+      for (const k of AERIALS) powerMove(m[k], 0.92, -3);
+    },
+    finalName: '奥義・丑の刻参り',
+  },
+  // 鷹: ハヤテの鷹の目 × 鳴神（雷）
+  narukami: {
+    weapon: 'wings',
+    weaponName: '翼',
+    jutsu: 'hawkeye',
+    fx: 'elec',
+    stats: { weight: 92, gravity: 0.56, maxFall: 10.2, run: 8.3, airSpeed: 5.8, airAccel: 0.48, jumpV: 16, airJumpV: 14.8, airJumps: 2, width: 50, height: 88, scale: 0.97 },
+    tune: (m) => {
+      for (const k of [...SMASHES, ...AERIALS]) powerMove(m[k], 1.1, 3);
+    },
+    specials: () => {
+      const extra: Record<string, MoveDef> = { hawkStrike: counterHit('鷹の目・返し爪', 'elec', 11) };
+      return {
+        nspec: shoot(
+          '鳴神・落雷',
+          'elec',
+          proj('bolt', 'elec', { x: 190, y: -520, vx: 0, vy: 24, r: 22, life: 30, ground: 'die', reflectable: false, hit: hit(9, 80, 40, 70, { fx: 'elec' }), explode: { r: 44, hit: hit(5, 70, 36, 50, { fx: 'elec' }) } }),
+          { f: 16, frames: 44, anim: 'castUp' },
+        ),
+        sspec: lunge('鷹の爪・迅雷', 'elec', { dmg: 10, speed: 16 }),
+        uspec: fly('鷹の舞い上がり', 'wind', { lift: -10.5 }),
+        dspec: counter('鷹の目・見切り', 'elec', 'hawkStrike'),
+        extra,
+      };
+    },
+    finalName: '奥義・鳴神',
+  },
+  // 白蛇: 長い尾のムチ × 毒（蛇ノ目の毒手裏剣から）
+  orochi: {
+    weapon: 'chain',
+    weaponName: '尾',
+    jutsu: 'poisonMist',
+    fx: 'poison',
+    stats: { weight: 104, run: 7.8, walk: 3.5, traction: 0.62, airSpeed: 5, jumpV: 15.6, width: 56, height: 80, scale: 0.98 },
+    rename: { nspec: '毒霧の息', sspec: '毒牙・三連', uspec: '白蛇・脱皮', dspec: '毒霧・瘴気爆' },
+    tune: (m) => {
+      // 尾のムチは長いぶん出が遅いので少し速く・強く
+      for (const k of [...SMASHES, ...AERIALS, 'ftilt', 'utilt', 'dashAtk'] as MoveSlot[]) {
+        shiftMove(m[k], -2);
+        powerMove(m[k], 1.08);
+      }
+      // 毒牙は矢ではなく毒液を吐く
+      for (const sp of m.sspec.spawns ?? []) {
+        sp.proj.draw = 'orb';
+        sp.proj.r = 9;
+      }
+    },
+    finalName: '奥義・八岐大蛇',
+  },
+  // うさぎ: 於兎の口寄せ（兎を呼ぶ）× 月
+  luna: {
+    weapon: 'fist',
+    weaponName: '兎脚',
+    jutsu: 'kuchiyose',
+    fx: 'light',
+    stats: { weight: 84, run: 8.4, jumpV: 18.2, airJumpV: 16.8, gravity: 0.64, airSpeed: 5.2, width: 48, height: 84, scale: 0.95 },
+    specials: () => {
+      const [sl, sx] = slam('月落とし', 'light', 'moonSlam');
+      return {
+        nspec: charger('口寄せ・兎走り', 'light', 'creature', { ground: true, speed: 9.5, life: 50, dmg: 9 }),
+        sspec: lunge('月兎蹴り', 'light', { dmg: 11, speed: 15 }),
+        uspec: rise('月跳び', 'light', { vy: -21 }),
+        dspec: sl,
+        extra: { ...sx },
+      };
+    },
+    finalName: '奥義・月読',
+  },
+  // 小鬼: イブキの泰山府君祭と呪符 × 閻魔の金棒
+  yama: {
+    weapon: 'club',
+    weaponName: '金棒',
+    jutsu: 'ritual',
+    fx: 'fire',
+    stats: { weight: 106, run: 7.2, walk: 3.1, jumpV: 15.4, gravity: 0.65, airSpeed: 4.8, width: 56, height: 86, scale: 1.04 },
+    finalName: '奥義・閻魔大王',
+  },
+  // オオカミ: 紫苑の鉤爪 × 野アザミ
+  makami: {
+    weapon: 'claw',
+    weaponName: '鉤爪',
+    jutsu: 'thistle',
+    fx: 'slash',
+    stats: { weight: 100, run: 9.3, dashInit: 9.9, walk: 3.8, traction: 0.5, airSpeed: 5.1, jumpV: 16.2, width: 58, height: 90, scale: 1 },
+    finalName: '奥義・大口真神',
+  },
+  // 黒猫: 久遠の鬼火 × 猫の目の選択
+  towa: {
+    weapon: 'onibi',
+    weaponName: '鬼火',
+    jutsu: 'catseye',
+    fx: 'fire',
+    stats: { weight: 100, run: 8.4, airSpeed: 5.2, jumpV: 16.4, width: 50, height: 82, scale: 0.96 },
+    tune: (m) => {
+      for (const k of [...SMASHES, ...AERIALS]) powerMove(m[k], 1.16, 4);
+    },
+    finalName: '奥義・永久の鬼火',
+  },
+  // 白猫: 刹那（一瞬）の速攻
+  setsuna: {
+    weapon: 'claw',
+    weaponName: '猫爪',
+    jutsu: 'kawarimi',
+    fx: 'slash',
+    stats: { weight: 80, run: 8.6, dashInit: 9.3, traction: 0.48, airSpeed: 5.3, jumpV: 16.8, airJumpV: 15.6, width: 50, height: 82, scale: 0.95 },
+    tune: (m) => {
+      for (const k of SMASHES) powerMove(m[k], 0.86, -5);
+      powerMove(m.sspec, 0.8, -6);
+      // 苦無ではなく爪の斬撃を飛ばす
+      for (const sp of m.nspec.spawns ?? []) sp.proj.draw = 'blade';
+    },
+    rename: { nspec: '刹那・爪飛ばし', sspec: '刹那・瞬身斬り', uspec: '刹那・瞬歩', dspec: '刹那・見切り' },
+    finalName: '奥義・刹那',
+  },
 };
 
-function lookFor(e: RosterEntry, weapon: WeaponKind, auraFx: string, h: number): Look {
-  const clan = CLAN_COLOR[e.clan] ?? '#cccccc';
-  const hue = h % 360;
-  const n = e.name;
-  const heaven = e.clan === '天界';
-  const abyss = e.clan === '根の国';
-  const old = n.includes('爺') || n === '石舟斎';
-  const hair = old ? '#e9e9ef' : heaven ? '#fff0c2' : abyss ? '#d9d2ea' : HAIRS[(h >>> 5) % HAIRS.length];
-  // 忍装束の色: 暗めを基本に、キャラごとに彩度・明るさを散らす
-  const sat = 24 + ((h >>> 17) & 15) * 1.4;
-  const lit = 17 + ((h >>> 21) & 15) * 1.1;
-  return {
-    body: heaven ? '#f4efe4' : abyss ? hsl(hue, 30, 14) : hsl(hue, sat, lit),
-    body2: heaven ? '#d9cfb8' : abyss ? hsl(hue, 34, 9) : hsl(hue, sat + 4, lit - 7),
-    accent: heaven ? '#e2b34a' : hsl((hue + 150) % 360, 70, 58),
-    scarf: clan,
-    skin: abyss ? '#cfc6e0' : heaven ? '#fff1dc' : SKINS[(h >>> 9) % SKINS.length],
-    hair,
-    eye: abyss ? '#ff4d6d' : heaven ? '#ffb000' : hsl((hue + 190) % 360, 80, 62),
-    weapon: WEAPON_COLOR[weapon] ?? '#cccccc',
-    trail: auraFx,
-    aura: auraFx,
-    ears: n.includes('狐') || n === '宇迦' || n === 'イズナ' ? 'fox' : n.includes('兎') ? 'rabbit' : n.includes('猫') || n === '久遠' ? 'cat' : n.includes('柴') ? 'dog' : null,
-    horns: n.includes('鬼'),
-    beard: old,
-    halo: heaven || weapon === 'halo',
-    wings: weapon === 'wings',
-    tails: n === '猫又' ? 2 : n === '宇迦' ? 5 : n.includes('狐') ? 1 : 0,
-    spiderLegs: n === 'ささがね',
-    hairStyle: old ? 'short' : STYLES[(h >>> 13) % STYLES.length],
-  };
-}
-
-const JUTSU_FX_COLOR: Record<string, string> = {
+const FX_COLOR: Record<string, string> = {
   fire: '#ff7a2f',
   water: '#48b8ff',
   wind: '#7dffc2',
@@ -297,8 +233,12 @@ const JUTSU_FX_COLOR: Record<string, string> = {
   normal: '#ffb347',
 };
 
-function allMoves(m: Record<MoveSlot, MoveDef>, extra: Record<string, MoveDef>): MoveDef[] {
-  return [...Object.values(m), ...Object.values(extra)];
+function statsFor(d: Design): FighterStats {
+  const s: FighterStats = { ...BASE, ...d.stats };
+  if (d.stats.dashInit === undefined) s.dashInit = s.run + 0.8;
+  if (d.stats.fastFall === undefined) s.fastFall = s.maxFall * 1.5;
+  if (d.stats.shortHopV === undefined) s.shortHopV = s.jumpV * 0.66;
+  return s;
 }
 
 function ratingsFor(s: FighterStats, moves: Record<MoveSlot, MoveDef>, weapon: WeaponKind): Ratings {
@@ -312,7 +252,7 @@ function ratingsFor(s: FighterStats, moves: Record<MoveSlot, MoveDef>, weapon: W
   const reach = styleOf(weapon).reach;
   const hasProj = !!moves.nspec.spawns;
   return {
-    power: clamp5((p - 14) / 2.2 + 3),
+    power: clamp5((p * s.scale - 14) / 2.2 + 3),
     speed: clamp5((s.run - 7.8) * 1.6 + 3),
     weight: clamp5((s.weight - 100) / 9 + 3),
     range: clamp5(reach / 10 + (hasProj ? 1.2 : 0) + 1.4),
@@ -320,17 +260,17 @@ function ratingsFor(s: FighterStats, moves: Record<MoveSlot, MoveDef>, weapon: W
   };
 }
 
-function tagsFor(s: FighterStats, moves: Record<MoveSlot, MoveDef>, weapon: WeaponKind, r: Ratings): string[] {
+function tagsFor(s: FighterStats, moves: Record<MoveSlot, MoveDef>, r: Ratings): string[] {
   const t: string[] = [];
-  if (BLADES.includes(weapon)) t.push('剣士');
   if (r.power >= 4) t.push('パワー');
   if (r.speed >= 4) t.push('スピード');
   if (moves.nspec.spawns) t.push('飛び道具');
   if (moves.dspec.counter) t.push('カウンター');
   if (moves.dspec.reflect) t.push('反射');
-  if (s.weight >= 112) t.push('重量級');
-  if (s.weight <= 90) t.push('軽量級');
+  if (s.weight >= 110) t.push('重量級');
+  if (s.weight <= 88) t.push('軽量級');
   if (s.airJumps >= 2) t.push('空中戦');
+  if (r.range >= 4) t.push('リーチ');
   const tricky = [moves.nspec, moves.sspec, moves.dspec].some(
     (m) => m.random || m.teleport || m.spawns?.some((sp) => sp.proj.trap || sp.proj.hit.stun || sp.proj.homing),
   );
@@ -338,16 +278,8 @@ function tagsFor(s: FighterStats, moves: Record<MoveSlot, MoveDef>, weapon: Weap
   return t.slice(0, 4);
 }
 
-function blurbFor(e: RosterEntry): string {
-  const who = e.clan === '天界' ? '天界の神' : e.clan === '根の国' ? '根の国の妖' : `${e.clan}の忍`;
-  const j = e.ninjutsu ? `${e.ninjutsu}の使い手` : '正体不明の力を操る';
-  const w = e.weapon && e.weapon !== 'なし' ? `得物は${e.weapon}。` : '素手で戦う。';
-  return `${who}。${j}。${w}`;
-}
-
-/** 奥義: 画面を覆う大技。名前は MCP の忍術名から */
-function finalMove(e: RosterEntry, fx: Effect): MoveDef {
-  const name = e.ninjutsu ? `奥義・${e.ninjutsu}` : '奥義・根の国開門';
+/** 奥義: 画面を覆う大技 */
+function finalMove(name: string, fx: Effect): MoveDef {
   return mv(name, 'castUp', 96, [hb(0, -60, 430, 48, 54, 30, 55, 72, 86, { fx, dir: 'away', hitlag: 1.5 })], {
     fx,
     final: true,
@@ -357,44 +289,47 @@ function finalMove(e: RosterEntry, fx: Effect): MoveDef {
   });
 }
 
-export function buildSpec(e: RosterEntry): FighterSpec {
-  const h = hash32(e.id + e.name);
-  const weapon: WeaponKind = e.weapon ? (WEAPON_MAP[e.weapon] ?? 'fist') : e.clan === '根の国' ? 'abyss' : 'fist';
-  const jutsu: JutsuKind = e.ninjutsu ? (JUTSU_MAP[e.ninjutsu] ?? FALLBACK_JUTSU[h % FALLBACK_JUTSU.length]) : 'abyss';
-  const stats = statsFor(e, weapon, h);
-  const normals = buildNormals(weapon, e.weapon && e.weapon !== 'なし' ? e.weapon : null);
-  const sp = buildSpecials(jutsu, h);
+function hashId(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+export function buildSpec(c: CnpDef): FighterSpec {
+  const d = DESIGN[c.id];
+  const entry = PARTNERS.get(c.id);
+  const partner = entry?.ninja ?? null;
+  const stats = statsFor(d);
+  const normals = buildNormals(d.weapon, d.weaponName);
+  const sp = d.specials ? d.specials(hashId(c.id)) : buildSpecials(d.jutsu, hashId(c.id));
+  for (const [k, name] of Object.entries(d.rename ?? {}) as [keyof SpecialSet, string][]) (sp[k] as MoveDef).name = name;
   const moves: Record<MoveSlot, MoveDef> = { ...normals, nspec: sp.nspec, sspec: sp.sspec, uspec: sp.uspec, dspec: sp.dspec };
-  for (const m of allMoves(moves, sp.extra)) scaleMove(m, stats.scale);
-  const auraFx = sp.nspec.fx ?? sp.dspec.fx ?? 'normal';
-  sp.extra.final = finalMove(e, auraFx);
-  const look = lookFor(e, weapon, JUTSU_FX_COLOR[auraFx] ?? '#ffffff', h);
-  const ratings = ratingsFor(stats, moves, weapon);
+  d.tune?.(moves);
+  for (const m of [...Object.values(moves), ...Object.values(sp.extra)]) scaleMove(m, stats.scale);
+  const fx = sp.nspec.fx ?? d.fx;
+  sp.extra.final = finalMove(d.finalName, d.fx);
+  const ratings = ratingsFor(stats, moves, d.weapon);
   return {
-    id: e.id,
-    name: e.name,
-    nameEn: e.nameEn,
-    clan: e.clan,
-    ninjutsu: e.ninjutsu,
-    ninjutsuEn: e.ninjutsuEn,
-    weapon: e.weapon,
-    weaponEn: e.weaponEn,
-    birthday: e.birthday,
-    image: e.image,
-    image3d: e.image3d,
-    weaponKind: weapon,
-    jutsuKind: jutsu,
+    id: c.id,
+    name: c.name,
+    nameEn: c.nameEn,
+    species: c.species,
+    partner,
+    partnerInMcp: (entry?.loreMention.length ?? 0) > 0,
+    clan: partner?.clan ?? '',
+    weaponKind: d.weapon,
+    jutsuKind: d.jutsu,
     stats,
-    look,
+    look: { color: c.color, aura: FX_COLOR[fx] ?? '#ffffff', trail: FX_COLOR[d.fx] ?? '#ffffff' },
     moves,
     extra: sp.extra,
-    blurb: blurbFor(e),
-    tags: tagsFor(stats, moves, weapon, ratings),
+    blurb: c.blurb,
+    tags: tagsFor(stats, moves, ratings),
     ratings,
   };
 }
 
-export const FIGHTERS: FighterSpec[] = (data.characters as RosterEntry[]).map(buildSpec);
+export const FIGHTERS: FighterSpec[] = CNP.map(buildSpec);
 
 export function fighterById(id: string): FighterSpec {
   return FIGHTERS.find((f) => f.id === id) ?? FIGHTERS[0];

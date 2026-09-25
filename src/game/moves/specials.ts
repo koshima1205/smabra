@@ -12,7 +12,7 @@ export interface SpecialSet {
 // ───────────────────────── テンプレート ─────────────────────────
 
 /** 飛び道具を放つ */
-function shoot(
+export function shoot(
   name: string,
   fx: Effect,
   p: ProjectileDef,
@@ -30,7 +30,7 @@ function shoot(
 }
 
 /** 横に突進して斬る */
-function lunge(
+export function lunge(
   name: string,
   fx: Effect,
   o: { speed?: number; dmg?: number; ang?: number; bkb?: number; kbg?: number; start?: number; dur?: number; frames?: number; multi?: boolean; armor?: number; invuln?: [number, number]; r?: number } = {},
@@ -60,7 +60,7 @@ function lunge(
 }
 
 /** 上昇しながら多段攻撃（復帰ワザ） */
-function rise(name: string, fx: Effect, o: { vy?: number; dmg?: number; final?: number; steer?: number; frames?: number; armor?: boolean } = {}): MoveDef {
+export function rise(name: string, fx: Effect, o: { vy?: number; dmg?: number; final?: number; steer?: number; frames?: number; armor?: boolean } = {}): MoveDef {
   const vy = o.vy ?? -18.5;
   return mv(
     name,
@@ -88,7 +88,7 @@ function rise(name: string, fx: Effect, o: { vy?: number; dmg?: number; final?: 
 }
 
 /** 瞬間移動（復帰ワザ） */
-function blink(name: string, fx: Effect, o: { dist?: number; dmg?: number } = {}): MoveDef {
+export function blink(name: string, fx: Effect, o: { dist?: number; dmg?: number } = {}): MoveDef {
   const f = 14;
   return mv(name, 'blink', 34, [hb(0, -50, 34, f + 1, f + 5, o.dmg ?? 6, 70, 44, 70, { fx, dir: 'away' })], {
     fx,
@@ -104,7 +104,7 @@ function blink(name: string, fx: Effect, o: { dist?: number; dmg?: number } = {}
 }
 
 /** 口寄せした乗り物で飛ぶ（復帰ワザ） */
-function fly(name: string, fx: Effect, o: { lift?: number; frames?: number; dmg?: number } = {}): MoveDef {
+export function fly(name: string, fx: Effect, o: { lift?: number; frames?: number; dmg?: number } = {}): MoveDef {
   return mv(name, 'castUp', o.frames ?? 56, [hb(0, -30, 32, 4, 10, o.dmg ?? 7, 80, 40, 80, { fx })], {
     fx,
     impulses: [{ f: 4, vy: o.lift ?? -9.5, set: true }],
@@ -118,7 +118,7 @@ function fly(name: string, fx: Effect, o: { lift?: number; frames?: number; dmg?
 }
 
 /** カウンター（反撃ワザは extra に入れる） */
-function counter(name: string, fx: Effect, then: string, o: { behind?: boolean; mult?: number } = {}): MoveDef {
+export function counter(name: string, fx: Effect, then: string, o: { behind?: boolean; mult?: number } = {}): MoveDef {
   return mv(name, 'counter', 46, [], {
     fx,
     counter: { f0: 5, f1: 28, then, mult: o.mult ?? 1.25, behind: o.behind },
@@ -127,12 +127,12 @@ function counter(name: string, fx: Effect, then: string, o: { behind?: boolean; 
   });
 }
 
-function counterHit(name: string, fx: Effect, dmg = 10): MoveDef {
+export function counterHit(name: string, fx: Effect, dmg = 10): MoveDef {
   return mv(name, 'fsmash', 30, [hb(48, -54, 32, 3, 7, dmg, 38, 52, 96, { fx })], { fx, invuln: [0, 8], trail: [2, 8] });
 }
 
 /** 自分の周囲に爆発 */
-function burst(
+export function burst(
   name: string,
   fx: Effect,
   o: { r?: number; dmg?: number; f?: number; frames?: number; stun?: number; poison?: boolean; multi?: boolean } = {},
@@ -153,7 +153,7 @@ function burst(
 }
 
 /** 急降下（着地で衝撃波。地上では衝撃波のみ） */
-function slam(name: string, fx: Effect, key: string): [MoveDef, Record<string, MoveDef>] {
+export function slam(name: string, fx: Effect, key: string): [MoveDef, Record<string, MoveDef>] {
   const air = mv(name, 'slam', 70, [hb(0, -20, 28, 8, 70, 9, 270, 30, 80, { fx })], {
     fx,
     impulses: [
@@ -170,7 +170,7 @@ function slam(name: string, fx: Effect, key: string): [MoveDef, Record<string, M
 }
 
 /** 自己強化・回復 */
-function power(name: string, fx: Effect, o: { mult?: number; frames?: number; selfDmg?: number; heal?: number; burst?: number } = {}): MoveDef {
+export function power(name: string, fx: Effect, o: { mult?: number; frames?: number; selfDmg?: number; heal?: number; burst?: number } = {}): MoveDef {
   const hits = o.burst ? [hb(0, -50, 60, 12, 15, o.burst, 70, 40, 60, { fx, dir: 'away' })] : [];
   return mv(name, 'buff', 42, hits, {
     fx,
@@ -183,7 +183,7 @@ function power(name: string, fx: Effect, o: { mult?: number; frames?: number; se
 }
 
 /** 周囲に残る結界・毒霧 */
-function field(name: string, fx: Effect, draw: ProjDraw, o: { follow?: boolean; r?: number; life?: number; dmg?: number; vx?: number; poison?: boolean } = {}): MoveDef {
+export function field(name: string, fx: Effect, draw: ProjDraw, o: { follow?: boolean; r?: number; life?: number; dmg?: number; vx?: number; poison?: boolean } = {}): MoveDef {
   return shoot(
     name,
     fx,
@@ -206,7 +206,7 @@ function field(name: string, fx: Effect, draw: ProjDraw, o: { follow?: boolean; 
 }
 
 /** 地面に仕掛ける罠 */
-function trap(name: string, fx: Effect, draw: ProjDraw, dmg = 10): MoveDef {
+export function trap(name: string, fx: Effect, draw: ProjDraw, dmg = 10): MoveDef {
   return shoot(
     name,
     fx,
@@ -229,7 +229,7 @@ function trap(name: string, fx: Effect, draw: ProjDraw, dmg = 10): MoveDef {
 }
 
 /** 反射 */
-function mirror(name: string, fx: Effect): MoveDef {
+export function mirror(name: string, fx: Effect): MoveDef {
   return mv(name, 'counter', 40, [hb(0, -50, 46, 4, 7, 5, 70, 40, 50, { fx, dir: 'away' })], {
     fx,
     reflect: { f0: 4, f1: 30, x: 0, y: -50, r: 64 },
@@ -239,7 +239,7 @@ function mirror(name: string, fx: Effect): MoveDef {
 }
 
 /** 分身・妖などが前方へ突撃する */
-function charger(name: string, fx: Effect, draw: ProjDraw, o: { speed?: number; dmg?: number; life?: number; ground?: boolean } = {}): MoveDef {
+export function charger(name: string, fx: Effect, draw: ProjDraw, o: { speed?: number; dmg?: number; life?: number; ground?: boolean } = {}): MoveDef {
   return shoot(
     name,
     fx,
@@ -260,7 +260,7 @@ function charger(name: string, fx: Effect, draw: ProjDraw, o: { speed?: number; 
 }
 
 /** 相手を引き寄せる糸・鎖 */
-function tether(name: string, fx: Effect, draw: ProjDraw): MoveDef {
+export function tether(name: string, fx: Effect, draw: ProjDraw): MoveDef {
   return shoot(
     name,
     fx,
@@ -278,7 +278,7 @@ function tether(name: string, fx: Effect, draw: ProjDraw): MoveDef {
 }
 
 // 共通の飛び道具
-const orb = (fx: Effect, o: Partial<ProjectileDef> & { dmg?: number } = {}) =>
+export const orb = (fx: Effect, o: Partial<ProjectileDef> & { dmg?: number } = {}) =>
   proj('orb', fx, { vx: 7.5, r: 16, life: 70, hit: hit(o.dmg ?? 8, 40, 30, 62, { fx }), ...o });
 
 // ───────────────────────── 忍術ごとのセット ─────────────────────────

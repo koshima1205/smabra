@@ -1,38 +1,43 @@
 /**
  * MCP roster sync
  *
- * NINJAMCP（CryptoNinja のキャラクター設定を提供する MCP サーバー）に
- * stdio で接続し、ゲームのキャラクター名簿 `src/data/roster.generated.json` を生成する。
+ * NINJAMCP（CryptoNinja のキャラクター設定を提供する MCP サーバー）に stdio で接続し、
+ * CNP（CryptoNinja Partners）の各キャラの「パートナーの忍者」の情報を取得して
+ * `src/data/roster.generated.json` を生成する。
  *
  *   npm run sync:roster
  *   npm run sync:roster -- --server /path/to/ninjamcp/dist/index.js
  *
- * 公開リポジトリに載せるのは「事実情報」だけ（ID・名前・クラン・忍術・武器・誕生日・画像URL）。
- * プロフィール本文などの文章は出典元の著作物なので取り込まない。
+ * - get_character: パートナーの忍者の ID・クラン・忍術・得物・誕生日（ワザと性能の元になる）
+ * - search_lore:   CNP キャラの名前で全文検索し、忍者のプロフィールにパートナーとして載っているか照合
+ * - get_worldview: クラン構成とデータ出典
+ * 公開リポジトリに載せるのは「事実情報」だけ。プロフィール本文などの文章は出典元の著作物なので取り込まない。
  */
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CNP } from "../src/data/cnp";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "src", "data", "roster.generated.json");
-const REQUIRED_TOOLS = ["list_characters", "get_character", "get_worldview"];
+const REQUIRED_TOOLS = ["get_character", "search_lore", "get_worldview"];
 
-interface Summary {
+interface Detail {
   id: string;
   name: string;
   name_en: string;
   clan: string;
   ninjutsu: string | null;
   weapon: string | null;
-  image_url: string;
-  image_url_3d: string;
+  birthday: string | null;
 }
 
-interface Detail extends Summary {
-  birthday: string | null;
+interface LoreHit {
+  id: string;
+  name: string;
+  matched_fields: Record<string, string>;
 }
 
 function arg(name: string): string | undefined {
@@ -76,7 +81,7 @@ async function main() {
     args: [serverPath()],
     stderr: "pipe",
   });
-  const client = new Client({ name: "ninja-ranbu-roster-sync", version: "1.0.0" });
+  const client = new Client({ name: "cnp-ranbu-roster-sync", version: "2.0.0" });
   await client.connect(transport);
 
   const server = client.getServerVersion();
@@ -87,29 +92,34 @@ async function main() {
   }
   console.log(`connected: ${server?.name} ${server?.version} — tools: ${toolNames.join(", ")}`);
 
-  const list = parseJson<{ count: number; characters: Summary[] }>(
-    await client.callTool({ name: "list_characters", arguments: {} }),
-  );
-
-  const characters = [];
-  for (const s of list.characters) {
-    const detail = parseJson<{ characters: Detail[] }>(
-      await client.callTool({ name: "get_character", arguments: { query: s.id } }),
-    ).characters[0];
-    const ninjutsu = splitLabel(s.ninjutsu);
-    const weapon = splitLabel(s.weapon);
-    characters.push({
-      id: s.id,
-      name: s.name,
-      nameEn: s.name_en,
-      clan: s.clan,
-      ninjutsu: ninjutsu?.ja ?? null,
-      ninjutsuEn: ninjutsu?.en ?? null,
-      weapon: weapon?.ja ?? null,
-      weaponEn: weapon?.en ?? null,
-      birthday: detail?.birthday ?? null,
-      image: s.image_url,
-      image3d: s.image_url_3d,
+  const partners = [];
+  for (const c of CNP) {
+    const found = parseJson<{ count: number; characters: Detail[] }>(
+      await client.callTool({ name: "get_character", arguments: { query: c.partner } }),
+    ).characters;
+    const d = found.find((x) => x.name === c.partner) ?? found[0];
+    if (!d) throw new Error(`MCP にパートナーの忍者「${c.partner}」が見つかりません`);
+    const lore = parseJson<{ character_hits: LoreHit[] }>(
+      await client.callTool({ name: "search_lore", arguments: { query: c.loreKey } }),
+    ).character_hits;
+    const hit = lore.find((x) => x.name === d.name);
+    const ninjutsu = splitLabel(d.ninjutsu);
+    const weapon = splitLabel(d.weapon);
+    partners.push({
+      cnp: c.id,
+      // 忍者のプロフィールに CNP キャラの名前が出てくるか（出てくる欄の名前だけを記録し、本文は保存しない）
+      loreMention: hit ? Object.keys(hit.matched_fields) : [],
+      ninja: {
+        id: d.id,
+        name: d.name,
+        nameEn: d.name_en,
+        clan: d.clan,
+        ninjutsu: ninjutsu?.ja ?? null,
+        ninjutsuEn: ninjutsu?.en ?? null,
+        weapon: weapon?.ja ?? null,
+        weaponEn: weapon?.en ?? null,
+        birthday: d.birthday ?? null,
+      },
     });
   }
 
@@ -133,14 +143,19 @@ async function main() {
     },
     credit: source,
     clans,
-    characters,
+    partners,
   };
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, `${JSON.stringify(out, null, 2)}\n`);
 
-  console.log(`wrote ${characters.length} characters, ${clans.length} clans → ${OUT}`);
-  for (const c of characters) {
-    console.log(`  ${c.id} ${c.name.padEnd(6, "　")} ${c.clan.padEnd(3, "　")} 忍術:${c.ninjutsu ?? "-"} / 得物:${c.weapon ?? "-"}`);
+  console.log(`wrote ${partners.length} partners, ${clans.length} clans → ${OUT}`);
+  for (const p of partners) {
+    const c = CNP.find((x) => x.id === p.cnp)!;
+    const n = p.ninja;
+    console.log(
+      `  ${c.name.padEnd(5, "　")} ← ${n.id} ${n.name.padEnd(5, "　")} ${n.clan.padEnd(3, "　")} 忍術:${n.ninjutsu ?? "-"} / 得物:${n.weapon ?? "-"}` +
+        (p.loreMention.length ? `  [MCP に記載: ${p.loreMention.join(",")}]` : "  [MCP 未記載]"),
+    );
   }
 }
 

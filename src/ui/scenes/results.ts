@@ -1,5 +1,5 @@
 import { audio } from '../../core/audio';
-import { CPU_COLOR, PORT_COLORS } from '../../render/fighterRenderer';
+import { CPU_COLOR, PORT_COLORS } from '../../render/overlay';
 import { renderBattle } from '../../render/battleRenderer';
 import { sfx, type App, type Scene } from '../app';
 import { h } from '../dom';
@@ -42,7 +42,7 @@ export class ResultsScene implements Scene {
             { class: 'wtxt' },
             h('div', { class: 'lbl' }, 'WINNER'),
             h('div', { class: 'wn' }, win.spec.name),
-            h('div', { class: 'we' }, `${this.battle.view.labels[wi]} ・ ${win.spec.nameEn} ・ ${win.spec.clan}`),
+            h('div', { class: 'we' }, `${this.battle.view.labels[wi]} ・ ${win.spec.nameEn} ・ ${win.spec.species}`),
             h('div', { class: 'we', style: 'margin-top:6px;font-weight:700' }, win.spec.blurb),
           ),
         ),

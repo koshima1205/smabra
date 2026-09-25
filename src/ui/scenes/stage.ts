@@ -1,6 +1,6 @@
 import { audio } from '../../core/audio';
 import { STAGES } from '../../game/stage';
-import { drawStagePreview } from '../../render/stageArt';
+import { stageThumb } from '../../render3d/snapshots';
 import { sfx, type App, type Scene } from '../app';
 import { h } from '../dom';
 import { BattleScene } from './battle';
@@ -9,6 +9,8 @@ import { SelectScene } from './select';
 export class StageScene implements Scene {
   private cards: HTMLElement[] = [];
   private focus = 0;
+  /** 3D のサムネイルは 1F に1枚ずつ描く（一度に作ると画面が固まるので） */
+  private pending: { i: number; ctx: CanvasRenderingContext2D }[] = [];
 
   constructor(private app: App) {
     this.focus = Math.max(0, STAGES.findIndex((s) => s.id === app.lastStage));
@@ -29,7 +31,15 @@ export class StageScene implements Scene {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText('？', 240, 140);
-        } else drawStagePreview(ctx, STAGES[i], 480, 270);
+        } else {
+          ctx.fillStyle = '#1b1438';
+          ctx.fillRect(0, 0, 480, 270);
+          ctx.fillStyle = 'rgba(255,255,255,0.5)';
+          ctx.font = '700 22px "M PLUS Rounded 1c", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('よみこみ中…', 240, 145);
+          this.pending.push({ i, ctx });
+        }
       }
       return h(
         'div',
@@ -82,6 +92,11 @@ export class StageScene implements Scene {
   }
 
   update(): void {
+    const job = this.pending.shift();
+    if (job) {
+      const img = stageThumb(STAGES[job.i], 480, 270);
+      if (img) job.ctx.drawImage(img, 0, 0);
+    }
     const m = this.app.menuAny();
     const n = this.cards.length;
     if (m.left || m.up) this.focus = (this.focus - 1 + n) % n;

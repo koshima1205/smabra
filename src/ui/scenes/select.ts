@@ -1,7 +1,7 @@
 import { audio } from '../../core/audio';
 import { CLAN_COLOR, FIGHTERS, fighterById } from '../../game/roster';
 import type { FighterSpec } from '../../game/types';
-import { CPU_COLOR, PORT_COLORS } from '../../render/fighterRenderer';
+import { CPU_COLOR, PORT_COLORS } from '../../render/overlay';
 import { sfx, type App, type Scene } from '../app';
 import { h } from '../dom';
 import { portraitEl } from '../portraitEl';
@@ -10,7 +10,6 @@ import { StageScene } from './stage';
 import { renderBattle } from '../../render/battleRenderer';
 import type { Match } from '../../game/match';
 
-const CLANS = ['全部', '伊賀', '甲賀', '風魔', '雑賀', '天界', '根の国'];
 const TIMES = [0, 120, 180, 300, 420];
 const RANDOM = -1;
 
@@ -20,7 +19,6 @@ export class SelectScene implements Scene {
   private visible: number[] = [];
   private slotEls: HTMLElement[] = [];
   private readyEl: HTMLElement | null = null;
-  private clan = '全部';
   private editing = 0;
   private stocksEl!: HTMLElement;
   private timeEl!: HTMLElement;
@@ -39,26 +37,6 @@ export class SelectScene implements Scene {
     }
     this.stocksEl = h('b', {}, String(app.rules.stocks));
     this.timeEl = h('b', {}, this.timeLabel());
-    const clanBar = h(
-      'div',
-      { class: 'clans' },
-      ...CLANS.map((c) =>
-        h(
-          'button',
-          {
-            class: c === this.clan ? 'on' : '',
-            onclick: (e) => {
-              this.clan = c;
-              clanBar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b === e.currentTarget));
-              this.buildGrid();
-              sfx('uiMove');
-            },
-            style: c !== '全部' ? `box-shadow: inset 0 -3px 0 ${CLAN_COLOR[c]}` : undefined,
-          },
-          c,
-        ),
-      ),
-    );
     this.grid = h('div', { class: 'grid' });
     const slots = h('div', { class: 'slots' });
     this.slotEls = app.slots.map((_, i) => {
@@ -74,7 +52,7 @@ export class SelectScene implements Scene {
         { class: 'topbar' },
         h('button', { class: 'btn small', onclick: () => this.back() }, '◀ タイトル'),
         h('h1', {}, 'キャラクター選択'),
-        clanBar,
+        h('span', { class: 'sub-title' }, `CNP ${FIGHTERS.length}体 — 性能はパートナー忍者の忍術・得物（MCP）から`),
         h('div', { class: 'spacer' }),
         h(
           'div',
@@ -145,18 +123,18 @@ export class SelectScene implements Scene {
     this.cards = [];
     this.visible = [];
     FIGHTERS.forEach((spec, idx) => {
-      if (this.clan !== '全部' && spec.clan !== this.clan) return;
       const card = h(
         'div',
         {
           class: 'card',
           title: `${spec.name}（${spec.nameEn}）`,
+          style: `background: radial-gradient(circle at 50% 38%, ${spec.look.color}aa, #221a3d 72%)`,
           onclick: () => this.pick(idx),
           onmouseenter: () => this.hover(idx),
         },
         portraitEl(spec, 120),
         h('span', { class: 'clan-dot', style: `background:${CLAN_COLOR[spec.clan] ?? '#888'}` }),
-        h('div', { class: 'nm' }, spec.name),
+        h('div', { class: 'nm' }, spec.name, h('small', {}, spec.species)),
         h('div', { class: 'cursors' }),
       );
       this.grid.append(card);
@@ -286,7 +264,18 @@ export class SelectScene implements Scene {
     if (spec) {
       info.append(
         h('div', { class: 'cname' }, spec.name, h('small', {}, spec.nameEn)),
-        h('div', { class: 'meta' }, h('span', { style: `color:${CLAN_COLOR[spec.clan]}` }, '●'), ` ${spec.blurb}`),
+        h('div', { class: 'meta' }, ` ${spec.blurb}`),
+        spec.partner
+          ? h(
+              'div',
+              { class: 'partner' },
+              h('span', { style: `color:${CLAN_COLOR[spec.clan] ?? '#ccc'}` }, '●'),
+              ` パートナー: ${spec.partner.name}（${spec.partner.clan}）`,
+              spec.partner.ninjutsu ? ` ・ 忍術「${spec.partner.ninjutsu}」` : '',
+              spec.partner.weapon ? ` ・ 得物「${spec.partner.weapon}」` : '',
+              spec.partnerInMcp ? h('span', { class: 'mcp', title: 'NINJAMCP の忍者設定にパートナーとして記載' }, 'MCP') : '',
+            )
+          : '',
         h('div', { class: 'tags' }, ...spec.tags.map((t) => h('span', { class: 'tag' }, t))),
         h(
           'div',

@@ -1,7 +1,7 @@
 import { clamp } from '../core/math';
 import type { Fighter } from '../game/fighter';
 import type { Match } from '../game/match';
-import { drawPortrait } from './images';
+import { drawPortrait } from './portrait';
 
 export interface HudPlayer {
   f: Fighter;
@@ -117,7 +117,7 @@ export function drawHud(ctx: CanvasRenderingContext2D, m: Match, players: HudPla
     for (let s = 0; s < Math.min(f.stocks, 8); s++) {
       ctx.beginPath();
       ctx.arc(98 + s * 15, 66, 5.5, 0, Math.PI * 2);
-      ctx.fillStyle = f.spec.look.scarf;
+      ctx.fillStyle = f.spec.look.color;
       ctx.fill();
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = '#fff';

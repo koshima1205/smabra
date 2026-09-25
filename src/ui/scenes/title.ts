@@ -7,6 +7,7 @@ import { Match } from '../../game/match';
 import { FIGHTERS, ROSTER_META } from '../../game/roster';
 import { STAGES } from '../../game/stage';
 import { renderBattle } from '../../render/battleRenderer';
+import { pumpThumbs, queueThumbs } from '../../render3d/snapshots';
 import { sfx, type App, type Scene } from '../app';
 import { h } from '../dom';
 import { KEY_LAYOUTS } from '../../core/input';
@@ -47,6 +48,15 @@ export class TitleScene implements Scene {
 
   enter(): void {
     audio.bgm('title');
+    // キャラ選択・HUD で使うアイコンを先に作っておく
+    queueThumbs(
+      FIGHTERS.map((f) => f.id),
+      [
+        { size: 180, mode: 'bust' },
+        { size: 240, mode: 'bust' },
+        { size: 128, mode: 'face' },
+      ],
+    );
     const items: [string, () => void][] = [
       ['たいせん', () => this.start()],
       ['あそびかた', () => this.openHelp()],
@@ -64,13 +74,13 @@ export class TitleScene implements Scene {
     const root = h(
       'div',
       { class: 'screen title' },
-      h('h1', { class: 'logo' }, '忍乱舞'),
-      h('div', { class: 'logo-sub' }, 'NINJA RANBU'),
-      h('p', { class: 'tagline' }, `CryptoNinja 全${FIGHTERS.length}キャラが大乱闘 — キャラ情報は MCP サーバー「${ROSTER_META.mcp.server}」から取得`),
+      h('h1', { class: 'logo' }, 'CNP乱舞'),
+      h('div', { class: 'logo-sub' }, 'CRYPTONINJA PARTNERS RANBU'),
+      h('p', { class: 'tagline' }, `CNP ${FIGHTERS.length}体が 3D で大乱闘 — パートナー忍者の設定は MCP サーバー「${ROSTER_META.mcp.server}」から取得`),
       h('div', { class: 'press-start blink' }, 'PRESS START'),
       h('div', { class: 'menu' }, ...this.buttons),
       h('p', { class: 'hint', style: 'margin-top:14px' }, 'クリック・タップ、または W/S・↑↓ で選んで J / Space / A で決定'),
-      h('div', { class: 'footer-note' }, '非公式ファンゲームです。CryptoNinja は Ninja DAO / イケハヤ氏の IP です。キャラクター画像は外部から読み込みます。'),
+      h('div', { class: 'footer-note' }, '非公式ファンゲームです。CNP（CryptoNinja Partners）・CryptoNinja は Ninja DAO / イケハヤ氏の IP です。3D モデルは本作オリジナルの手続き生成です。'),
     );
     this.app.ui.append(root);
     this.updateFocus();
@@ -183,6 +193,7 @@ export class TitleScene implements Scene {
 
   private openCredits(): void {
     const meta = ROSTER_META;
+    const mcpCount = FIGHTERS.filter((f) => f.partnerInMcp).length;
     this.showModal(
       h(
         'div',
@@ -191,22 +202,30 @@ export class TitleScene implements Scene {
         h(
           'p',
           {},
-          `このゲームのキャラクター（${FIGHTERS.length}人）は、Model Context Protocol サーバー `,
+          `CNP の ${FIGHTERS.length} キャラは、それぞれ CryptoNinja の忍者のパートナーです。Model Context Protocol サーバー `,
           h('b', {}, `${meta.mcp.server} ${meta.mcp.version ?? ''}`),
           ' に MCP クライアントとして接続し、',
-          h('code', {}, meta.mcp.tools.filter((t) => t !== 'get_character_image' && t !== 'search_lore').join(' / ')),
-          ' ツールで取得した名前・クラン・忍術・得物から、ワザ・性能・見た目を自動生成しています。',
+          h('code', {}, 'get_character / search_lore / get_worldview'),
+          ' でパートナーの忍者のクラン・忍術・得物を取得して、ワザと性能を組み立てています。',
+          `（うち ${mcpCount} キャラは、忍者のプロフィールにパートナーとして載っていることも MCP で照合）`,
         ),
         h('p', {}, `同期日時: ${new Date(meta.mcp.syncedAt).toLocaleString('ja-JP')}（npm run sync:roster で再取得）`),
+        h(
+          'ul',
+          {},
+          ...FIGHTERS.map((f) =>
+            h('li', {}, h('b', {}, f.name), `（${f.species}）← ${f.partner?.name ?? '?'}・${f.partner?.clan ?? ''}：${f.partner?.ninjutsu ?? '-'} / ${f.partner?.weapon ?? '-'}`, f.partnerInMcp ? ' [MCP]' : ''),
+          ),
+        ),
         h('h3', {}, 'データ出典'),
-        h('p', {}, h('a', { href: meta.credit.url, target: '_blank', rel: 'noopener' }, meta.credit.title), `（${meta.credit.author}）— NINJAMCP 経由`),
+        h('p', {}, h('a', { href: meta.credit.url, target: '_blank', rel: 'noopener' }, meta.credit.title), `（${meta.credit.author}）— NINJAMCP 経由。MCP に載っていないパートナー関係（ルナ・マカミ・トワ・セツナ）は CNP 公式の公開情報より。`),
         h('h3', {}, 'ライセンス・ガイドライン'),
         h(
           'ul',
           {},
-          h('li', {}, 'CryptoNinja は Ninja DAO / イケハヤ氏による IP です。本作は非公式・非営利のファンメイド作品で、公式とは関係ありません。二次創作の範囲は公式の利用ガイドラインをご確認ください。'),
-          h('li', {}, 'キャラクター画像はリポジトリに含めず、実行時に MCP が示す URL から読み込みます（読み込めない場合は紋章で表示）。'),
-          h('li', {}, 'NINJAMCP（MIT License）: github.com/omikirin/mcp'),
+          h('li', {}, 'CNP（CryptoNinja Partners）・CryptoNinja は Ninja DAO / イケハヤ氏による IP です。本作は非公式・非営利のファンメイド作品で、公式とは関係ありません。二次創作の範囲は公式の利用ガイドラインをご確認ください。'),
+          h('li', {}, 'キャラクターの 3D モデル・ステージはすべて本作オリジナルの手続き生成です（公式イラストは使用・同梱していません）。'),
+          h('li', {}, 'NINJAMCP（MIT License）: github.com/omikirin/mcp ／ three.js（MIT License）'),
           h('li', {}, 'ゲームのプログラム・演出・効果音はすべて本作オリジナル（手続き生成）です。'),
         ),
         h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => this.closeModal() }, 'とじる')),
@@ -216,6 +235,7 @@ export class TitleScene implements Scene {
 
   update(): void {
     this.demo.step();
+    if (this.app.tick > 20) pumpThumbs();
     const m = this.app.menuAny();
     if (this.modal) {
       if (m.back || m.confirm || m.start) this.closeModal();

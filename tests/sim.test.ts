@@ -22,7 +22,7 @@ describe('CPU vs CPU simulation', () => {
   });
 
   it('4-player free-for-all produces a winner', () => {
-    const m = cpuMatch([2, 12, 22, 32], 'iga', 9, 2);
+    const m = cpuMatch([0, 3, 5, 7], 'iga', 9, 2);
     for (let i = 0; i < 60 * 60 * 6 && m.phase !== 'done'; i++) m.step();
     expect(m.phase).toBe('done');
     expect(m.winner).not.toBeNull();

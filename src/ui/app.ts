@@ -138,7 +138,7 @@ export class App {
     this.load();
   }
 
-  private static KEY = 'ninja-ranbu:v1';
+  private static KEY = 'cnp-ranbu:v1';
 
   /** 前回のルールと選択を復元（ブラウザのストレージが使えなければ何もしない） */
   private load(): void {

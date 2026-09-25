@@ -352,24 +352,11 @@ export interface FighterStats {
 }
 
 export interface Look {
-  body: string;
-  body2: string;
-  accent: string;
-  scarf: string;
-  skin: string;
-  hair: string;
-  eye: string;
-  weapon: string;
-  trail: string;
+  /** テーマ色（UI・マフラー） */
+  color: string;
+  /** エフェクト（オーラ・軌跡）の色 */
   aura: string;
-  ears: 'fox' | 'cat' | 'rabbit' | 'dog' | null;
-  horns: boolean;
-  beard: boolean;
-  halo: boolean;
-  wings: boolean;
-  tails: number;
-  spiderLegs: boolean;
-  hairStyle: 'spiky' | 'long' | 'bun' | 'short' | 'twin' | 'hood';
+  trail: string;
 }
 
 export interface Ratings {
@@ -380,7 +367,8 @@ export interface Ratings {
   recovery: number;
 }
 
-export interface FighterSpec {
+/** パートナーの忍者（NINJAMCP から同期した事実情報） */
+export interface PartnerNinja {
   id: string;
   name: string;
   nameEn: string;
@@ -390,8 +378,19 @@ export interface FighterSpec {
   weapon: string | null;
   weaponEn: string | null;
   birthday: string | null;
-  image: string | null;
-  image3d: string | null;
+}
+
+export interface FighterSpec {
+  id: string;
+  name: string;
+  nameEn: string;
+  /** 種族（パンダ・白蛇など） */
+  species: string;
+  partner: PartnerNinja | null;
+  /** パートナー関係が MCP（忍者のプロフィール）に記載されているか */
+  partnerInMcp: boolean;
+  /** パートナーの忍者のクラン */
+  clan: string;
   weaponKind: WeaponKind;
   jutsuKind: JutsuKind;
   stats: FighterStats;

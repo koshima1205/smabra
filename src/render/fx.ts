@@ -218,7 +218,7 @@ export function drawProjectile(ctx: CanvasRenderingContext2D, p: Projectile, tim
       ctx.fill();
       circle(ctx, 20, -28, 11);
       ctx.fill();
-      ctx.strokeStyle = p.owner.spec.look.scarf;
+      ctx.strokeStyle = p.owner.spec.look.color;
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(10, -30);

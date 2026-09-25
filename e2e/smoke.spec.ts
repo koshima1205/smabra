@@ -4,8 +4,8 @@ interface DebugApp {
   scene: { constructor: { name: string }; match?: { frame: number; phase: string; fighters: { damage: number; state: string }[] } } | null;
 }
 
-/** 外部の画像ホストに届かない環境でも失敗扱いにしない */
-const ignorable = (t: string) => /Failed to load resource|ERR_|net::|favicon/i.test(t);
+/** フォントなど外部リソースに届かない環境・ソフトウェア WebGL の警告は失敗扱いにしない */
+const ignorable = (t: string) => /Failed to load resource|ERR_|net::|favicon|GL Driver|WebGL|swiftshader/i.test(t);
 
 test('title → select → stage → battle', async ({ page }) => {
   const errors: string[] = [];
@@ -15,7 +15,7 @@ test('title → select → stage → battle', async ({ page }) => {
   });
 
   await page.goto('/');
-  await expect(page.locator('.logo')).toHaveText('忍乱舞');
+  await expect(page.locator('.logo')).toHaveText('CNP乱舞');
   await page.waitForTimeout(800);
   await page.screenshot({ path: 'test-results/01-title.png' });
 
@@ -55,6 +55,15 @@ test('title → select → stage → battle', async ({ page }) => {
   expect(state!.phase).toBe('play');
   expect(state!.frame).toBeGreaterThan(200);
   expect(state!.n).toBe(2);
+
+  // 3D（WebGL）で描いている
+  const gl = await page.evaluate(() => {
+    const w = (window as unknown as { __world: { renderer: { info: { render: { calls: number; triangles: number } } } } | null }).__world;
+    return w ? w.renderer.info.render : null;
+  });
+  expect(gl).not.toBeNull();
+  expect(gl!.calls).toBeGreaterThan(20);
+  expect(gl!.triangles).toBeGreaterThan(5000);
 
   // ポーズ
   await page.keyboard.press('Escape');
