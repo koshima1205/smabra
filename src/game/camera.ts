@@ -64,7 +64,8 @@ export class Camera {
       const half = (stage.main.x2 - stage.main.x1) / 2;
       l = Math.min(l, mid - half * 0.45);
       r = Math.max(r, mid + half * 0.45);
-      b = Math.max(b, stage.main.y + 40);
+      // 下の HUD に隠れないよう、足場の下も少し映す
+      b = Math.max(b + 60, stage.main.y + 120);
       t = Math.min(t, stage.main.y - 240);
       // 縦長画面（スマホ縦持ち）は横幅を詰めて寄る
       const narrow = this.viewW < this.viewH;
