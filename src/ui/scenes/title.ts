@@ -69,6 +69,7 @@ export class TitleScene implements Scene {
       h('p', { class: 'tagline' }, `CryptoNinja 全${FIGHTERS.length}キャラが大乱闘 — キャラ情報は MCP サーバー「${ROSTER_META.mcp.server}」から取得`),
       h('div', { class: 'press-start blink' }, 'PRESS START'),
       h('div', { class: 'menu' }, ...this.buttons),
+      h('p', { class: 'hint', style: 'margin-top:14px' }, 'クリック・タップ、または W/S・↑↓ で選んで J / Space / A で決定'),
       h('div', { class: 'footer-note' }, '非公式ファンゲームです。CryptoNinja は Ninja DAO / イケハヤ氏の IP です。キャラクター画像は外部から読み込みます。'),
     );
     this.app.ui.append(root);

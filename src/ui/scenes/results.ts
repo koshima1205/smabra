@@ -55,9 +55,14 @@ export class ResultsScene implements Scene {
             return h(
               'div',
               { class: 'rank', style: `border-color:${c}` },
-              h('span', { class: 'n', style: `color:${c}` }, `${r + 1}`),
-              h('b', {}, f.spec.name),
-              h('div', { class: 's' }, `撃墜 ${f.kos} ・ 落下 ${f.falls} ・ 与ダメ ${Math.round(f.dealt)}%`),
+              h('div', { class: 'rank-por' }, portraitEl(f.spec, 96)),
+              h(
+                'div',
+                {},
+                h('span', { class: 'n', style: `color:${c}` }, `${r + 1}`),
+                h('b', {}, f.spec.name),
+                h('div', { class: 's' }, `撃墜 ${f.kos} ・ 落下 ${f.falls} ・ 与ダメ ${Math.round(f.dealt)}%`),
+              ),
             );
           }),
         ),
@@ -98,6 +103,6 @@ export class ResultsScene implements Scene {
 
   render(ctx: CanvasRenderingContext2D, w: number, hh: number, dpr: number, time: number): void {
     const b = this.battle;
-    renderBattle(ctx, b.match, { ...b.view, hud: false }, w, hh, dpr, time);
+    renderBattle(ctx, b.match, { ...b.view, labels: b.view.labels.map(() => ''), hud: false }, w, hh, dpr, time);
   }
 }
