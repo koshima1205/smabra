@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ninjamcp": {
+      "command": "node",
+      "args": ["node_modules/ninjamcp/dist/index.js"]
+    }
+  }
+}

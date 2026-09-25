@@ -1,0 +1,30 @@
+{
+  "name": "ninja-ranbu",
+  "private": true,
+  "version": "0.1.0",
+  "description": "忍乱舞 NINJA RANBU — CryptoNinja の非公式ファンメイド・プラットフォーム対戦ゲーム（キャラデータは NINJAMCP から MCP 経由で取得）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "build:single": "tsc --noEmit && vite build --mode single",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "sync:roster": "tsx scripts/sync-roster.ts",
+    "mcp:ninja": "node node_modules/ninjamcp/dist/index.js"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@playwright/test": "1.56.1",
+    "@types/node": "^22.20.4",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  },
+  "optionalDependencies": {
+    "ninjamcp": "github:omikirin/mcp#ebc23931dc0e383fb3c58c390f258e24305a9a37"
+  }
+}
