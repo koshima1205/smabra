@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CNP models preview</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #1c1a2a;
+        font:
+          12px/1.4 system-ui,
+          sans-serif;
+      }
+      canvas {
+        display: block;
+      }
+      #hud {
+        position: fixed;
+        left: 8px;
+        top: 6px;
+        color: #fff;
+        text-shadow: 0 1px 2px #000;
+        pointer-events: none;
+        white-space: pre;
+      }
+      .label {
+        position: fixed;
+        transform: translate(-50%, 0);
+        color: #fff;
+        font-weight: 700;
+        text-shadow:
+          0 1px 2px #000,
+          0 0 4px #000;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <div id="hud"></div>
+    <script type="module" src="./models.ts"></script>
+  </body>
+</html>

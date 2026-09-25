@@ -1,7 +1,8 @@
 import './style.css';
 import { audio } from './core/audio';
 import { InputManager } from './core/input';
-import { placeholderCharacter as buildCharacter, placeholderStage as buildStage } from './render3d/placeholder';
+import { buildCharacter } from './render3d/characters';
+import { placeholderStage as buildStage } from './render3d/placeholder';
 import { initSnapshots } from './render3d/snapshots';
 import { setWorld, World3D } from './render3d/world';
 import { App } from './ui/app';

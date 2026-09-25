@@ -395,9 +395,9 @@ kbd {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 150px));
+  grid-template-columns: repeat(5, minmax(0, min(150px, 16.5vh)));
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .card {
