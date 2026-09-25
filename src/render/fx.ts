@@ -472,32 +472,32 @@ function drawParticle(ctx: CanvasRenderingContext2D, p: Particle): void {
       ctx.fillRect(-p.size, -p.size / 3, p.size * 2, p.size / 1.5);
       break;
     case 'blast': {
-      // 撃墜の光の柱（中心に向かって伸びる）
+      // 撃墜の光の柱（画面中央へ向かって細くなる光）
       ctx.globalCompositeOperation = 'lighter';
-      const len = 1400;
+      const len = 1100;
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot + Math.PI);
-      const w = p.size * (0.3 + k * 0.7);
+      const w = p.size * 0.38 * (0.35 + k * 0.65);
       const g = ctx.createLinearGradient(0, 0, len, 0);
-      g.addColorStop(0, '#ffffff');
-      g.addColorStop(0.15, p.color);
+      g.addColorStop(0, 'rgba(255,255,255,0.85)');
+      g.addColorStop(0.12, p.color);
+      g.addColorStop(0.55, 'rgba(255,255,255,0.08)');
       g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.globalAlpha = Math.min(1, k * 1.5);
+      ctx.globalAlpha = Math.min(0.85, k * 1.2);
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.moveTo(0, -w * 0.25);
-      ctx.lineTo(len, -w);
-      ctx.lineTo(len, w);
-      ctx.lineTo(0, w * 0.25);
+      ctx.moveTo(0, -w);
+      ctx.quadraticCurveTo(len * 0.35, -w * 0.55, len, 0);
+      ctx.quadraticCurveTo(len * 0.35, w * 0.55, 0, w);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.globalAlpha = k;
+      // 根元の強い光
+      const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 1.6);
+      rg.addColorStop(0, 'rgba(255,255,255,0.9)');
+      rg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = rg;
       ctx.beginPath();
-      ctx.moveTo(0, -w * 0.08);
-      ctx.lineTo(len * 0.7, -w * 0.3);
-      ctx.lineTo(len * 0.7, w * 0.3);
-      ctx.lineTo(0, w * 0.08);
+      ctx.arc(0, 0, w * 1.6, 0, Math.PI * 2);
       ctx.fill();
       break;
     }

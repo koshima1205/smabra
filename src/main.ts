@@ -12,8 +12,10 @@ const touchEl = document.getElementById('touch') as HTMLElement;
 let W = 0;
 let H = 0;
 let DPR = 1;
+/** 描画が重い端末では解像度を下げる（1 = 端末の解像度のまま） */
+let quality = 1;
 function resize(): void {
-  DPR = Math.min(2, window.devicePixelRatio || 1);
+  DPR = Math.max(0.6, Math.min(2, window.devicePixelRatio || 1) * quality);
   W = window.innerWidth;
   H = window.innerHeight;
   canvas.width = Math.round(W * DPR);
@@ -34,9 +36,24 @@ app.go(new TitleScene(app));
 const STEP = 1000 / 60;
 let acc = 0;
 let last = performance.now();
+let slowSum = 0;
+let slowN = 0;
 function frame(now: number): void {
-  acc += Math.min(250, now - last);
+  const dt = now - last;
+  acc += Math.min(250, dt);
   last = now;
+  // 平均 40fps を下回り続けたら解像度を一段下げる
+  if (dt < 250 && !document.hidden) {
+    slowSum += dt;
+    if (++slowN >= 120) {
+      if (slowSum / slowN > 25 && quality > 0.5) {
+        quality = Math.max(0.5, quality - 0.25);
+        resize();
+      }
+      slowSum = 0;
+      slowN = 0;
+    }
+  }
   let n = 0;
   while (acc >= STEP && n < 5) {
     input.poll();
