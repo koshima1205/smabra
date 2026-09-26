@@ -15,7 +15,7 @@ test('title → select → stage → battle', async ({ page }) => {
   });
 
   await page.goto('/');
-  await expect(page.locator('.logo')).toHaveText('CNP乱舞');
+  await expect(page.locator('.logo')).toHaveText('月下乱舞');
   await page.waitForTimeout(800);
   await page.screenshot({ path: 'test-results/01-title.png' });
 

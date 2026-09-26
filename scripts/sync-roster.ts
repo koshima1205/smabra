@@ -81,7 +81,7 @@ async function main() {
     args: [serverPath()],
     stderr: "pipe",
   });
-  const client = new Client({ name: "cnp-ranbu-roster-sync", version: "2.0.0" });
+  const client = new Client({ name: "gekka-ranbu-roster-sync", version: "2.0.0" });
   await client.connect(transport);
 
   const server = client.getServerVersion();

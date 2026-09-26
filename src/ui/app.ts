@@ -138,6 +138,7 @@ export class App {
     this.load();
   }
 
+  /** 旧タイトル（CNP乱舞）時代のキー。変えると保存済みの設定が消えるのでそのまま */
   private static KEY = 'cnp-ranbu:v1';
 
   /** 前回のルールと選択を復元（ブラウザのストレージが使えなければ何もしない） */

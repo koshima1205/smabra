@@ -74,8 +74,8 @@ export class TitleScene implements Scene {
     const root = h(
       'div',
       { class: 'screen title' },
-      h('h1', { class: 'logo' }, 'CNP乱舞'),
-      // 公式の「CNP○○」と誤認されないよう、ロゴのすぐ下で非公式と示す（CNP 二次創作ガイドライン「誤認防止」）
+      h('h1', { class: 'logo' }, '月下乱舞'),
+      // 公式作品と誤認されないよう、ロゴのすぐ下で非公式と示す（CNP 二次創作ガイドライン「誤認防止」）
       h('div', { class: 'logo-sub' }, '非公式ファンゲーム'),
       h('p', { class: 'tagline' }, `CNP と月蝕綺譚の ${FIGHTERS.length}体が 3D で入り乱れて戦う — CNP のパートナー忍者の設定は MCP サーバー「${ROSTER_META.mcp.server}」から取得`),
       h('div', { class: 'press-start blink' }, 'PRESS START'),

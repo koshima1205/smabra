@@ -1,4 +1,4 @@
-# CNP乱舞 CNP RANBU
+# 月下乱舞 GEKKA RANBU
 
 **CNP（CryptoNinja Partners）** と **月蝕綺譚** のキャラクターたちが 3D で入り乱れて戦う、**プラットフォーム対戦アクション**（非公式ファンメイド）。
 各キャラの「パートナーの忍者」の設定を **MCP（Model Context Protocol）サーバー「NINJAMCP」に接続して取得**し、忍者の忍術・得物からワザと性能を組み立てています。
