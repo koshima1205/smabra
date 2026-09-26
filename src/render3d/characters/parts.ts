@@ -15,10 +15,10 @@ export type Col = THREE.ColorRepresentation;
 export type V2 = [number, number];
 export type Expr = ModelPose['expression'];
 
-/** 輪郭線 */
-export const INK = '#1b1726';
+/** 輪郭線（公式イラストの線に合わせた濃い藍） */
+export const INK = '#1c1a52';
 /** 顔の線（まぶた・口） */
-export const LINE = '#2b1d38';
+export const LINE = '#1d1c6e';
 
 export const RED = '#e0443a';
 export const BLUE = '#3b7be0';
@@ -529,7 +529,20 @@ export class Tube {
   private readonly B = new THREE.Vector3();
   private readonly cap: [number, number];
 
-  constructor(kit: Kit, parent: THREE.Object3D, mat: THREE.Material, rad: number[], radial: number, ol: number, belly?: { col: Col; back: Col; half: number }, cap: [number, number] = [0.9, 0.9]) {
+  /**
+   * belly.half = 0 なら腹の色分けなし。belly.paint を渡すと節 i・周の k ごとに色を上書きできる（模様・先だけ色違いなど。
+   * 1 頂点だけ塗ると周りへぼけて小さなひし形になる）。k = -1 は両端のふた
+   */
+  constructor(
+    kit: Kit,
+    parent: THREE.Object3D,
+    mat: THREE.Material,
+    rad: number[],
+    radial: number,
+    ol: number,
+    belly?: { col: Col; back: Col; half: number; paint?: (i: number, k: number) => Col | null },
+    cap: [number, number] = [0.9, 0.9],
+  ) {
     const n = rad.length;
     this.rad = rad;
     this.t = ol;
@@ -544,7 +557,7 @@ export class Tube {
         isBelly.push(b);
       }
     };
-    if (belly) {
+    if (belly && belly.half > 0) {
       push(0, belly.half, true);
       push(belly.half, TAU - belly.half, false);
       push(TAU - belly.half, TAU, true);
@@ -579,9 +592,12 @@ export class Tube {
       const c = new Float32Array(nv * 3);
       const cb = new THREE.Color(belly.col);
       const ck = new THREE.Color(belly.back);
+      const cp = new THREE.Color();
       for (let v = 0; v < nv; v++) {
         const k = v === 0 || v === nv - 1 ? -1 : (v - 1) % R;
-        const cc = k >= 0 && isBelly[k] ? cb : ck;
+        const i = v === 0 ? 0 : v === nv - 1 ? n - 1 : Math.floor((v - 1) / R);
+        const pc = belly.paint?.(i, k);
+        const cc = pc != null ? cp.set(pc) : k >= 0 && isBelly[k] ? cb : ck;
         c[v * 3] = cc.r;
         c[v * 3 + 1] = cc.g;
         c[v * 3 + 2] = cc.b;
@@ -1458,4 +1474,51 @@ export function armOrder(rig: Rig): void {
 export function clearHead(r: Rig, k = 0.6): void {
   r.fsh.rotation.x = -armOut(r.torso.rotation.z + r.fsh.rotation.z, k);
   r.bsh.rotation.x = armOut(r.torso.rotation.z + r.bsh.rotation.z, k);
+}
+
+/**
+ * 形を +y の軸に沿って曲げる（高さ h で curl ラジアン、+x 側へ巻く）。炎の房・冠羽など。
+ * 法線は計算し直す
+ */
+export function bendGeo(g: THREE.BufferGeometry, curl: number, h: number): THREE.BufferGeometry {
+  const R = h / curl;
+  const p = g.getAttribute('position');
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i);
+    const y = p.getY(i);
+    if (y <= 0) continue;
+    const th = y / R;
+    p.setXY(i, R - (R - x) * Math.cos(th), (R - x) * Math.sin(th));
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
+/** ぎざぎざの毛の房（根元が原点、+x へ spikes 本の先が伸びる平たい形） */
+export function tuftGeo(len: number, wid: number, spikes: number, depth: number): THREE.BufferGeometry {
+  const pts: V2[] = [[0, -wid / 2]];
+  for (let i = 0; i < spikes; i++) {
+    const t0 = i / spikes;
+    const t1 = (i + 0.5) / spikes;
+    const lean = (t1 - 0.5) * 0.5;
+    pts.push([len * (0.55 + 0.1 * Math.sin(t0 * Math.PI)), -wid / 2 + wid * t0]);
+    pts.push([len * (1 - 0.15 * Math.abs(t1 - 0.5)), -wid / 2 + wid * t1 + lean * wid]);
+  }
+  pts.push([len * 0.55, wid / 2]);
+  pts.push([0, wid / 2]);
+  return flatGeo(pts, depth, 0.25, 1);
+}
+
+/** 頭の横に左右一対の毛の房（頬の毛）を付ける。yaw・pitch は楕円体 s の上の位置、tilt は先の上がり具合 */
+export function addTufts(kit: Kit, parent: THREE.Object3D, s: Surf, col: Col, o: { yaw: number; pitch: number; len: number; wid: number; spikes?: number; tilt?: number; ol?: number }): THREE.Mesh[] {
+  const g = kit.geo(`tuft|${o.len}|${o.wid}|${o.spikes ?? 3}`, () => tuftGeo(o.len, o.wid, o.spikes ?? 3, 1.4));
+  const out: THREE.Mesh[] = [];
+  for (const side of [1, -1]) {
+    const yaw = side * o.yaw;
+    const m = kit.solid(g, kit.toon(col), parent, 0, 0, 0, o.ol ?? 0.6);
+    m.position.copy(onSurf(s, yaw, o.pitch, 0.9));
+    m.rotation.set(0, -yaw, o.tilt ?? 0, 'YXZ');
+    out.push(m);
+  }
+  return out;
 }

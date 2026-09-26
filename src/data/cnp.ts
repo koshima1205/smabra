@@ -81,7 +81,7 @@ export const CNP: CnpDef[] = [
     partner: 'イブキ',
     loreKey: 'ヤーマ',
     color: '#d94a2b',
-    blurb: 'イブキのパートナー。閻魔大王の名を持つ小鬼で、金棒と呪符を操る。',
+    blurb: 'イブキのパートナーの小鬼。頭が切れて土壇場に強い。金棒と呪符を操る。',
   },
   {
     id: 'makami',

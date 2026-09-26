@@ -8,6 +8,7 @@ import {
   addBody,
   addFlame,
   addHead,
+  addTufts,
   addLegs,
   buildFace,
   clamp01,
@@ -22,6 +23,7 @@ import {
   lathe,
   neckScarf,
   onSurf,
+  polyPts,
   stretchArms,
   Surf,
   taper,
@@ -49,6 +51,16 @@ export interface CatSpec {
   flame?: Col;
   /** 尻尾の先の巻き具合 */
   curl: number;
+  /** 口まわりの模様。pts が無ければ中心の濃い楕円が外へぼける（ぼかしは毛の色へ） */
+  mask?: { col: Col; pts?: V2[]; w?: number; h?: number };
+  /** 手足の先の色 */
+  paws?: Col;
+  /** 尻尾の先の色 */
+  tailTip?: Col;
+  /** いつも見えている短い眉の色 */
+  brows?: Col;
+  /** 頬の毛の房 */
+  tufts?: boolean;
 }
 
 /** 三角の耳（+y 向き） */
@@ -89,15 +101,18 @@ export function buildCat(opts: CharacterOpts, c: CatSpec): CharacterModel {
 
   const BS = new Surf(0.5, 13.5, 0, 14, 16, 13);
   addBody(kit, rig.torso, BS, fur);
-  const arms = addArms(kit, rig, { r: [3.8, 3.5, 3.3], col: c.fur, end: [4.3, 4.4, 4.1], ol: 0.7 });
-  addLegs(kit, rig, { r: [5.2, 4.6, 4.2], col: c.fur, end: [6.6, 4.1, 5.3], endX: 1.8, ol: 0.8 });
+  const arms = addArms(kit, rig, { r: [3.8, 3.5, 3.3], col: c.fur, end: [4.3, 4.4, 4.1], endCol: c.paws, ol: 0.7 });
+  addLegs(kit, rig, { r: [5.2, 4.6, 4.2], col: c.fur, end: [6.6, 4.1, 5.3], endCol: c.paws, endX: 1.8, ol: 0.8 });
   if (c.claws) {
     const claws = kit.geo('claws', () => clawsGeo(1.3, -3.5, 1.7, 0.7, 2));
     for (const h of arms.hands) kit.deco(claws, kit.toon(c.claws), h);
   }
 
   // 長い尻尾（先が巻く）
-  const tail = new Tube(kit, rig.torso, fur, TAIL_R, kit.n(12, 8), 0.75, undefined, [0.6, 1]);
+  const tailTip = c.tailTip;
+  const tail = tailTip
+    ? new Tube(kit, rig.torso, kit.toon('#ffffff', { vc: true }), TAIL_R, kit.n(12, 8), 0.75, { col: c.fur, back: c.fur, half: 0, paint: (i) => (i >= TAIL_R.length - 3 ? tailTip : null) }, [0.6, 1])
+    : new Tube(kit, rig.torso, fur, TAIL_R, kit.n(12, 8), 0.75, undefined, [0.6, 1]);
   tail.ref.set(0, 0, 1);
 
   // 頭
@@ -111,6 +126,38 @@ export function buildCat(opts: CharacterOpts, c: CatSpec): CharacterModel {
     blush: { yaw: 0.73, pitch: -0.28, w: 3.3, h: 1.9, col: c.blush },
     brow: [0.4, 1.3],
   });
+  // 口まわりの模様（顔の目・口より下に貼る）
+  if (c.mask) {
+    const m = c.mask;
+    const d = new Decal(HS);
+    if (m.pts) {
+      d.fill({ yaw: 0, pitch: -0.3, lift: 0.1 }, polyPts(m.pts, 4), [0, -3], 3);
+      kit.deco(d.build(), kit.toon(m.col), look);
+    } else {
+      const a = new THREE.Color(m.col);
+      const b = new THREE.Color(c.fur);
+      const w = m.w ?? 7;
+      const h = m.h ?? 5;
+      const tmp = new THREE.Color();
+      d.ellipse({ yaw: 0, pitch: -0.3, lift: 0.1 }, 0, 0, w, h, 20, 3, (u, v) => tmp.copy(a).lerp(b, Math.min(1, Math.hypot(u / w, v / h) ** 2)));
+      kit.deco(d.build(), kit.toon('#ffffff', { vc: true }), look);
+    }
+  }
+  if (c.brows) {
+    const d = new Decal(HS);
+    for (const side of [1, -1])
+      d.line(
+        { yaw: side * 0.4, pitch: 0.24, lift: 0.26, mirror: side < 0 },
+        [
+          [-1.8, 0.1],
+          [0, 0.5],
+          [1.6, 0],
+        ],
+        taper(0.9, 0.4),
+      );
+    kit.deco(d.build(), kit.flat(c.brows), look);
+  }
+  if (c.tufts) addTufts(kit, look, HS, c.fur, { yaw: 1.25, pitch: -0.32, len: 7, wid: 10, spikes: 3, tilt: -0.35 });
   // ひげ
   const wh = new Decal(HS);
   for (const side of [1, -1])

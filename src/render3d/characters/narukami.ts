@@ -8,6 +8,7 @@ import {
   armOut,
   buildFace,
   coneGeo,
+  ellGeo,
   Decal,
   finish,
   flatGeo,
@@ -27,12 +28,13 @@ import {
   type V2,
 } from './parts';
 
-const FEATHER = '#3447b4';
-const WING = '#283891';
-const TIPS = '#7392f2';
-const CREAM = '#fff0cf';
-const BEAK = '#ffc23a';
-const CREST = '#ffd84a';
+const FEATHER = '#9c6226';
+const WING = '#8e5820';
+const TIPS = '#553c38';
+const CREAM = '#e4d6b8';
+const BEAK = '#e4d6b8';
+const BEAK_TIP = '#553c38';
+const LEG = '#ffe066';
 
 /** 羽の形（前腕の関節から -y へ。+x が前縁） */
 const WING_MAIN: V2[] = [
@@ -66,15 +68,15 @@ const WING_TIPS: V2[] = [
   [-6.4, -4.5],
   [-2, -6],
 ];
-/** 稲妻の冠羽 */
-const BOLT: V2[] = [
-  [-1.6, 0],
-  [1.6, 0],
-  [0.9, 4.6],
-  [3.7, 4.6],
-  [-0.4, 13.5],
-  [0.9, 7.6],
-  [-2.3, 7.6],
+/** 後頭部の冠羽（2 本のとがった羽が後ろ -x へ流れる。根元が原点） */
+const CREST: V2[] = [
+  [4, -3.5],
+  [-5, -3],
+  [-15, 2],
+  [-7.5, 1.8],
+  [-18, 8.5],
+  [-5, 5.5],
+  [4, 3.5],
 ];
 const TAIL_F: V2[] = [
   [0, 0.5],
@@ -87,7 +89,10 @@ const TAIL_F: V2[] = [
   [-2.3, -1.8],
 ];
 
-/** ナルカミ（鷹）: 藍色の羽に稲妻の冠羽。腕がそのまま翼、足は鉤爪 */
+/**
+ * ナルカミ（鷹）: 茶色の羽、後頭部に後ろへ流れる冠羽、黄色い目のきりっとした顔、クリーム色の鉤くちばしとお腹。
+ * 腕がそのまま翼（先は焦げ茶）、足は黄色
+ */
 export function buildNarukami(opts: CharacterOpts = {}): CharacterModel {
   const kit = new Kit(opts.quality);
   const scarf = accent(opts.variant, '#1d2658', [RED, YELLOW, GREEN]);
@@ -108,30 +113,11 @@ export function buildNarukami(opts: CharacterOpts = {}): CharacterModel {
   const feather = kit.toon(FEATHER);
   const cream = kit.toon(CREAM);
 
-  // 胴（胸はクリーム色）
+  // 胴（お腹の下のほうがクリーム色）
   const BS = new Surf(0.5, 14, 0, 15.5, 17, 14.5);
   addBody(kit, rig.torso, BS, feather);
-  const chest = new Decal(BS).ellipse({ yaw: 0, pitch: 0.05, lift: 0.12 }, 0, 0, 10.5, 13, 24, 3);
-  kit.deco(chest.build(), cream, rig.torso);
-  // 胸の羽模様（小さな v）
-  const vs = new Decal(BS);
-  for (const [u, v] of [
-    [-3, 2],
-    [3, 2],
-    [0, -3],
-    [-3.5, -8],
-    [3.5, -8],
-  ] as V2[])
-    vs.line(
-      { yaw: 0, pitch: 0.05, lift: 0.2 },
-      [
-        [u - 1.4, v + 0.9],
-        [u, v],
-        [u + 1.4, v + 0.9],
-      ],
-      0.55,
-    );
-  kit.deco(vs.build(), kit.flat('#d9b98a'), rig.torso);
+  const belly = new Decal(BS).ellipse({ yaw: 0, pitch: -0.42, lift: 0.12 }, 0, 0, 10, 8.5, 24, 3);
+  kit.deco(belly.build(), cream, rig.torso);
 
   // 翼（腕）
   const wingMat = kit.toon(WING);
@@ -170,24 +156,25 @@ export function buildNarukami(opts: CharacterOpts = {}): CharacterModel {
     return merge([limbGeo(2.1, 1.8, 8 - 1.35, ws, 2), toe(0, 4.6), toe(0.5, 3.8), toe(-0.5, 3.8), toe(0, 2.6, true)]);
   });
   const beakMat = kit.toon(BEAK);
+  const legMat = kit.toon(LEG);
   for (const [hip, knee] of [
     [rig.fhip, rig.fknee],
     [rig.bhip, rig.bknee],
   ] as const) {
-    kit.solid(thigh, cream, hip, 0, 0, 0, 0.8);
-    kit.solid(shinG, beakMat, knee, 0, 0, 0, 0.6);
+    kit.solid(thigh, feather, hip, 0, 0, 0, 0.8);
+    kit.solid(shinG, legMat, knee, 0, 0, 0, 0.6);
   }
 
   // 頭
   const HS = new Surf(1, 20, 0, 22, 21.5, 21.5);
   const look = addHead(kit, rig, HS, feather);
-  // 顔の下半分はクリーム色
-  const mask = new Decal(HS).ellipse({ yaw: 0, pitch: -0.52, lift: 0.1 }, 0, 0, 16.5, 10.5, 28, 3);
-  kit.deco(mask.build(), cream, look);
+  // くちばしの付け根のまわりはクリーム色
+  const cere = new Decal(HS).ellipse({ yaw: 0, pitch: -0.2, lift: 0.1 }, 0, 0, 4.6, 4.2, 20, 2);
+  kit.deco(cere.build(), cream, look);
   const face = buildFace(kit, look, {
     s: HS,
-    eye: { yaw: 0.42, pitch: 0.03, w: 3.7, h: 4.4, top: '#8a4a00', bot: '#ffd84a', pupil: [1.7, 2.4, 0.3, '#150b1c'], cut: [0.52, 0.42], lid: 1.25, hl: 0.9, shut: '#fff0cf' },
-    blush: { yaw: 0.74, pitch: -0.3, w: 3.2, h: 1.8, col: '#ffa8b8' },
+    // 黄色い目に大きな紺の瞳。上が平らに切れたきりっとした目
+    eye: { yaw: 0.42, pitch: 0.03, w: 4.0, h: 4.6, top: '#ffe46a', bot: '#fff0a0', pupil: [2.2, 2.9, 0.1, '#1a1c80'], cut: [0.4, 0.12], lid: 1.3, hl: 0.8, shut: '#2a1a12' },
     brow: [0.25, 1.5],
   });
   // くちばし（上は鉤型、下は口を開けると下がる）
@@ -201,6 +188,9 @@ export function buildNarukami(opts: CharacterOpts = {}): CharacterModel {
     return xf(g, 0, 0, 0, 0, 0, -(Math.PI / 2 + 0.22));
   });
   kit.solid(upperBeak, beakMat, beak, 0, 0.4, 0, 0.6);
+  // 鉤の先は焦げ茶
+  const hook = kit.deco(kit.geo('beak-tip', () => ellGeo(1.6, 1.3, 1.9, 10, 8)), kit.toon(BEAK_TIP), beak);
+  hook.position.set(6.3, -1.9, 0);
   const jaw = kit.group(beak, -0.5, -1.2, 0);
   kit.solid(
     kit.lod('beak-lo', (k) => xf(coneGeo(2.7, 4.8, kit.n(10 * k, 6), 4, 0.2, 1, 0.85), 0, 0, 0, 0, 0, -(Math.PI / 2 + 0.75))),
@@ -211,14 +201,18 @@ export function buildNarukami(opts: CharacterOpts = {}): CharacterModel {
     0,
     0.5,
   );
-  // 稲妻の冠羽
-  const boltG = kit.lod('bolt', () => flatGeo(BOLT, 1.4, 0.35));
-  const boltMat = kit.toon(CREST, { emissive: '#5a3c00' });
-  for (const side of [1, -1]) {
-    const b = kit.solid(boltG, boltMat, look, 0, 0, 0, 0.6);
-    b.position.copy(onSurf(HS, side * 0.62, 0.8, 0.9));
-    b.rotation.set(-side * 0.45, 0, 0.42, 'YXZ');
-  }
+  // 後頭部の冠羽（後ろへ流れる。少し厚みを持たせて左右どちらからも見える）
+  const crest = kit.solid(
+    kit.lod('crest', () => flatGeo(CREST, 3.2, 0.8)),
+    feather,
+    look,
+    0,
+    0,
+    0,
+    0.7,
+  );
+  crest.position.copy(onSurf(HS, Math.PI - 0.35, 0.6, 0.88));
+  crest.rotation.set(0, 0.35, -0.15);
 
   // 首巻き（紺）
   const sc = neckScarf(kit, rig.torso, scarf, { y: 30.6, x: 0.5, R: 9.4, a: 2.6, b: 3.2 });

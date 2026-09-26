@@ -26,12 +26,17 @@ import {
   type Probe,
 } from './parts';
 
-/** リーリー（パンダ）: 白い体に黒い耳・目のまわり・手足。赤いカンフーの鉢巻と帯 */
+/**
+ * リーリー（パンダ）: 大きな白い頭に濃紺の耳・手足。目のまわりは灰色の大きなぶちで、その中に濃紺の丸い目。
+ * 鉢巻はゲームの色分け用（素材屋CNP の公式イラストには無い）
+ */
 export function buildLeeLee(opts: CharacterOpts = {}): CharacterModel {
   const kit = new Kit(opts.quality);
   const band = accent(opts.variant, RED, [BLUE, YELLOW, GREEN]);
   const WHITE = '#f7f4f0';
-  const BLACK = '#2c2834';
+  // 公式イラストの「黒」は濃紺
+  const BLACK = '#1f2184';
+  const PATCH = '#a9a9b3';
   const rig = createRig({
     height: 100,
     hipY: 18.9,
@@ -58,26 +63,6 @@ export function buildLeeLee(opts: CharacterOpts = {}): CharacterModel {
     BS.cy,
     BS.cz,
     1,
-  );
-  // 帯（腰）
-  const sash = kit.solid(
-    kit.lod('sash', (k) => ellGeo(BS.rx + 0.9, 3.2, BS.rz + 0.9, kit.n(28 * k, 10), kit.n(8 * k, 5))),
-    kit.toon(band),
-    rig.torso,
-    BS.cx,
-    5.5,
-    0,
-    0.6,
-  );
-  sash.scale.set(0.93, 1, 0.93);
-  kit.solid(
-    kit.lod('sash-knot', (k) => ellGeo(3, 2.6, 2.2, kit.n(12 * k, 6), kit.n(8 * k, 5))),
-    kit.toon(band),
-    rig.torso,
-    8.5,
-    5.2,
-    13.2,
-    0.5,
   );
   // しっぽ
   kit.solid(
@@ -106,16 +91,15 @@ export function buildLeeLee(opts: CharacterOpts = {}): CharacterModel {
     aimZ(ear, surfNormal(HS, yaw, 0.8));
     ears.push(ear);
   }
-  // 目のまわりの黒いぶち（外側が下がる）
+  // 目のまわりの灰色のぶち（大きな楕円、上が内側へ傾く）
   const patch = new Decal(HS);
-  for (const side of [1, -1]) patch.ellipse({ yaw: side * 0.45, pitch: -0.11, rot: -0.55, mirror: side < 0, lift: 0.12 }, 0, 0, 6.6, 9.2, kit.n(24, 14), 2);
-  kit.deco(patch.build(), black, look);
+  for (const side of [1, -1]) patch.ellipse({ yaw: side * 0.44, pitch: -0.08, rot: -0.35, mirror: side < 0, lift: 0.12 }, 0, 0, 7.2, 9.4, kit.n(24, 14), 2);
+  kit.deco(patch.build(), kit.toon(PATCH), look);
   const face = buildFace(kit, look, {
     s: HS,
-    eye: { yaw: 0.43, pitch: -0.045, w: 3.3, h: 4.1, top: '#1a1224', bot: '#7a5646', white: [1.15, '#ffffff'], hl: 1.1, shut: '#ffffff' },
-    nose: { pitch: -0.3, w: 3.4, h: 2.3, col: BLACK, tri: true },
-    mouth: { pitch: -0.42, w: 2.4, kind: 'cat', thick: 0.85, open: [3.3, 3.4], gap: 1.6 },
-    blush: { yaw: 0.8, pitch: -0.36, w: 3.6, h: 2.1, col: '#ff9fb4' },
+    eye: { yaw: 0.42, pitch: -0.05, w: 2.9, h: 4.0, top: BLACK, bot: '#2c2f9c', hl: 0.9, shut: BLACK },
+    nose: { pitch: -0.3, w: 2.2, h: 1.4, col: BLACK },
+    mouth: { pitch: -0.42, w: 2.6, kind: 'smile', thick: 0.85, open: [3.6, 3.6] },
     brow: [0.55, 1.4],
   });
   const hb = headBand(kit, look, HS, band, { lat0: 0.34, lat1: 0.55, t: 1.3, tilt: 0.1, knot: 4.6 });

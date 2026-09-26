@@ -6,8 +6,8 @@ import {
   addArms,
   addBody,
   addHead,
+  addTufts,
   addLegs,
-  arcPts,
   BLUE,
   buildFace,
   clamp01,
@@ -26,15 +26,13 @@ import {
   RED,
   stretchArms,
   Surf,
-  taper,
-  xf,
   YELLOW,
   type Probe,
   type V2,
 } from './parts';
 
-const FUR = '#fff7ea';
-const PINK = '#ffb3c6';
+const FUR = '#fcaad8';
+const NAVY = '#1d1f86';
 
 /** 長い耳（+y 向き、根元が原点） */
 const EAR: V2[] = [
@@ -48,16 +46,10 @@ const EAR: V2[] = [
   [2.6, 22.6],
   [0, 24],
 ];
-const SCROLL: V2[] = [
-  [0, -8.6],
-  [2.7, -8.6],
-  [3.1, -8.2],
-  [3.1, 8.2],
-  [2.7, 8.6],
-  [0, 8.6],
-];
-
-/** ルナ（うさぎ）: クリーム色の毛、長い耳、額に三日月、大きな足。背中に小さな巻物 */
+/**
+ * ルナ（うさぎ）: 全身ピンクの毛、長い耳（内側に白い差し色）、頬のふわふわの毛と胸の白い毛。
+ * 紺の丸い目にサーモンピンクの頬
+ */
 export function buildLuna(opts: CharacterOpts = {}): CharacterModel {
   const kit = new Kit(opts.quality);
   const scarf = accent(opts.variant, BLUE, [RED, YELLOW, PURPLE]);
@@ -94,70 +86,46 @@ export function buildLuna(opts: CharacterOpts = {}): CharacterModel {
     0,
     0.7,
   );
-  // 背中の巻物
-  const scroll = kit.group(rig.torso, -12.5, 19, 3);
-  scroll.rotation.set(0.25, 0, 0.75);
-  kit.solid(
-    kit.lod('scroll', (k) => lathe(SCROLL, kit.n(14 * k, 7))),
-    kit.toon('#f3e2bb'),
-    scroll,
-    0,
-    0,
-    0,
-    0.6,
+  // 胸の白い毛
+  const chest = new Decal(BS).fill(
+    { yaw: 0, pitch: 0.55, lift: 0.14 },
+    [
+      [-4.2, 1.5],
+      [-2.4, -2.2],
+      [-0.8, -0.8],
+      [0.4, -3],
+      [1.8, -0.9],
+      [3.4, -2.4],
+      [4.4, 1.5],
+    ],
+    [0, 0],
+    2,
   );
-  kit.solid(
-    kit.lod('scroll-knob', (k) => merge([ellGeo(2, 1.5, 2, kit.n(10 * k, 6), kit.n(8 * k, 4)).translate(0, 9.4, 0), ellGeo(2, 1.5, 2, kit.n(10 * k, 6), kit.n(8 * k, 4)).translate(0, -9.4, 0)])),
-    kit.toon('#a3342f'),
-    scroll,
-    0,
-    0,
-    0,
-    0.5,
-  );
-  kit.deco(
-    kit.lod('scroll-tie', (k) =>
-      xf(
-        lathe(
-          [
-            [3.22, -1],
-            [3.22, 1],
-          ],
-          kit.n(14 * k, 7),
-        ),
-        0,
-        0,
-        0,
-      ),
-    ),
-    kit.toon(scarf),
-    scroll,
-  );
+  kit.deco(chest.build(), kit.toon('#ffffff'), rig.torso);
 
   // 頭
   const HS = new Surf(0.5, 18.5, 0, 20.5, 19.5, 20);
   const look = addHead(kit, rig, HS, fur);
   const face = buildFace(kit, look, {
     s: HS,
-    eye: { yaw: 0.4, pitch: -0.05, w: 3.8, h: 4.8, top: '#6e0c24', bot: '#ff5c76', lid: 0.85, lash: 1.2, hl: 1.1 },
-    nose: { pitch: -0.27, w: 1.8, h: 1.25, col: '#ff8fab', tri: true },
-    mouth: { pitch: -0.37, w: 1.9, kind: 'cat', thick: 0.75, open: [2.8, 3.2], gap: 1.1 },
-    blush: { yaw: 0.72, pitch: -0.3, w: 3.4, h: 2, col: '#ffb0c4' },
+    eye: { yaw: 0.38, pitch: -0.07, w: 2.9, h: 3.9, top: NAVY, bot: '#2c2f9c', hl: 0.9 },
+    nose: { pitch: -0.25, w: 1.1, h: 0.6, col: NAVY },
+    mouth: { pitch: -0.36, w: 1.9, kind: 'w', thick: 0.7, open: [2.8, 3.2] },
+    blush: { yaw: 0.66, pitch: -0.3, w: 3.6, h: 3.0, col: '#ff9294' },
     brow: [0.45, 1.25],
   });
-  // 額の三日月
-  const moon = new Decal(HS).line({ yaw: 0, pitch: 0.5, lift: 0.3 }, arcPts(1.1, 0, 3, 3.2, Math.PI * 0.55, Math.PI * 1.45, 14), taper(2.2, 0.08));
-  kit.deco(moon.build(), kit.toon('#ffd23f', { emissive: '#4a3500' }), look);
+  // 頬のふわふわの毛
+  addTufts(kit, look, HS, FUR, { yaw: 1.2, pitch: -0.22, len: 7, wid: 9, spikes: 3, tilt: -0.1 });
   // 耳（付け根で曲がる）
   const earG = kit.lod('ear', (k) => lathe(EAR, kit.n(14 * k, 7), 0.5, 1));
-  const earIn = kit.geo('ear-in', () => earInnerGeo(EAR, 1.5, 21.5, kit.n(10, 6), 0.5, 1, 0.6));
+  const earIn = kit.geo('ear-in', () => earInnerGeo(EAR, 9, 17, kit.n(10, 6), 0.5, 1, 0.45));
   const ears: THREE.Group[] = [];
   for (const side of [1, -1]) {
     const pv = kit.group(look);
     pv.position.copy(onSurf(HS, side * 0.36, 1.05, 0.9));
     const e = kit.group(pv);
     kit.solid(earG, fur, e, 0, 0, 0, 0.7);
-    kit.deco(earIn, kit.toon(PINK), e);
+    kit.deco(earIn, kit.toon('#ffffff'), e);
     ears.push(e);
     pv.rotation.x = side * 0.3;
   }

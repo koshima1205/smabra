@@ -6,22 +6,20 @@ import {
   addBody,
   addFlame,
   addHead,
-  bandGeo,
   BLUE,
+  bendGeo,
+  coneGeo,
   buildFace,
   clearHead,
-  Decal,
   finish,
   flicker,
   GREEN,
   groundSpin,
-  INK,
   Kit,
   lathe,
   limbGeo,
   merge,
   neckScarf,
-  polyPts,
   PURPLE,
   ringGeo,
   stretchArms,
@@ -33,11 +31,16 @@ import {
   type V2,
 } from './parts';
 
-/** ミタマ（おばけ）: しずく形の白い体に渦巻くしっぽ、額に三角の天冠、木槌と人魂 */
+/**
+ * ミタマ（おばけ・幽霊）: 水色の丸い体に、頭のてっぺんの炎のような巻いた房と、波打つしっぽ。
+ * 半分閉じた眠たげな目（緑の瞳）。木槌と人魂はゲーム用の持ち物
+ */
 export function buildMitama(opts: CharacterOpts = {}): CharacterModel {
   const kit = new Kit(opts.quality);
   const scarf = accent(opts.variant, GREEN, [BLUE, YELLOW, PURPLE]);
-  const BODY = '#f3f0ff';
+  const BODY = '#bfe8fb';
+  const SHADE = '#78d2ec';
+  const NAVY = '#1d1f86';
   const rig = createRig({
     height: 84,
     hipY: 21.7,
@@ -61,7 +64,8 @@ export function buildMitama(opts: CharacterOpts = {}): CharacterModel {
   const TAIL_R = [10.5, 9.2, 7.6, 6, 4.6, 3.4, 2.4, 1.5, 0.8];
   const TAIL_L = [5.5, 5, 4.6, 4.2, 3.8, 3.4, 3, 2.6];
   const TAIL_A = [-0.35, -0.75, -1.15, -1.55, -1.95, -2.4, -2.85, -3.3];
-  const tail = new Tube(kit, rig.torso, body, TAIL_R, kit.n(16, 10), 0.9, undefined, [0.6, 1]);
+  // しっぽの先ほど濃い水色
+  const tail = new Tube(kit, rig.torso, kit.toon('#ffffff', { vc: true }), TAIL_R, kit.n(16, 10), 0.9, { col: BODY, back: BODY, half: 0, paint: (i) => (i >= 5 ? SHADE : null) }, [0.6, 1]);
 
   const arms = addArms(kit, rig, { r: [3.3, 3.0, 2.8], col: BODY, end: [3.6, 3.8, 3.4], ol: 0.7 });
 
@@ -113,37 +117,20 @@ export function buildMitama(opts: CharacterOpts = {}): CharacterModel {
   const look = addHead(kit, rig, HS, body);
   const face = buildFace(kit, look, {
     s: HS,
-    eye: { yaw: 0.4, pitch: -0.08, w: 3.9, h: 5.0, top: '#221a3e', bot: '#8a8cf0', lid: 0.9, lash: 1.0, hl: 1.15 },
-    mouth: { pitch: -0.33, w: 2.2, kind: 'w', open: [3.2, 3.8] },
-    blush: { yaw: 0.72, pitch: -0.28, w: 3.6, h: 2.2, col: '#ffc2dc' },
+    // 上が平らに切れた半目。白目の中に緑の瞳と大きな紺の瞳孔
+    eye: { yaw: 0.4, pitch: -0.1, w: 3.6, h: 4.2, top: '#1f9a5c', bot: '#3fd08a', pupil: [2.3, 2.6, -0.5, NAVY], white: [1.1, '#ffffff'], cut: [0.3, 0.04], lid: 1.2, hl: 0.8 },
+    mouth: { pitch: -0.33, w: 2.0, kind: 'smile', open: [3.0, 3.4] },
+    blush: { yaw: 0.72, pitch: -0.3, w: 3.2, h: 2.6, col: '#ffa8d2' },
     brow: [0.5, 1.3],
   });
-  // 天冠（額の三角の布）: 縁取り＋白
-  const tri: V2[] = [
-    [-7, -4.2],
-    [7, -4.2],
-    [0, 6.6],
-  ];
-  const big: V2[] = [
-    [-8.5, -5],
-    [8.5, -5],
-    [0, 8.3],
-  ];
-  const cloth = new Decal(HS).fill({ yaw: 0.12, pitch: 0.44, lift: 0.14 }, polyPts(big, 8), [0, -0.8], 3);
-  kit.deco(cloth.build(), kit.flat(INK), look);
-  const clothIn = new Decal(HS).fill({ yaw: 0.12, pitch: 0.44, lift: 0.28 }, polyPts(tri, 8), [0, -0.8], 3);
-  kit.deco(clothIn.build(), kit.toon('#ffffff'), look);
-  const tie = kit.group(look, HS.cx, HS.cy, HS.cz);
-  kit.solid(
-    kit.lod('tie', (k) => bandGeo(HS.rx, HS.ry, HS.rz, 0.2, 0.26, 0.45, kit.n(32 * k, 12), 2)),
-    kit.toon('#ffffff'),
-    tie,
-    0,
-    0,
-    0,
-    0.45,
-  );
-
+  // 頭のてっぺんの炎のような房（大きな房が後ろへ巻き、奥にもう一つ）
+  const wisp = kit.lod('wisp', (k) => bendGeo(coneGeo(6.5, 16, kit.n(12 * k, 7), 9, 0.1, 1, 0.8, 1.2), 1.5, 16));
+  const wisp2 = kit.lod('wisp2', (k) => bendGeo(coneGeo(4.5, 12, kit.n(10 * k, 6), 7, 0.1, 1, 0.75, 1.2), 1.6, 12));
+  // 曲げると +x（前）へ巻くので、y 軸で半回転させて後ろへ巻かせる
+  const w1 = kit.solid(wisp, body, look, HS.cx + 1, HS.cy + HS.ry - 2.5, 0, 0.8);
+  w1.rotation.set(0, Math.PI, 0.1);
+  const w2 = kit.solid(wisp2, kit.toon(SHADE), look, HS.cx - 7, HS.cy + HS.ry - 4.5, 2, 0.7);
+  w2.rotation.set(0.35, Math.PI, 0.45);
   // 首巻き
   const sc = neckScarf(kit, rig.torso, scarf, { y: 22.3, x: 0.5, R: 8.8, a: 2.6, b: 3.0 });
 

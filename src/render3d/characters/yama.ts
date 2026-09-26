@@ -15,7 +15,7 @@ import {
   coneGeo,
   Decal,
   finish,
-  flatGeo,
+  ellGeo,
   GREEN,
   groundSpin,
   Kit,
@@ -25,7 +25,6 @@ import {
   neckScarf,
   onSurf,
   PURPLE,
-  ringGeo,
   stretchArms,
   Surf,
   surfNormal,
@@ -36,26 +35,14 @@ import {
   type V2,
 } from './parts';
 
-const SKIN = '#f36b3b';
-const BELLY = '#ffb27d';
-const HORN = '#fff0b8';
-const HAT = '#28232f';
-const GOLD = '#f5c542';
-const TIGER = '#ffc53a';
-const STRIPE = '#2a2230';
+const SKIN = '#94cc62';
+const HORN = '#a29696';
+const HORN_TIP = '#ffc21e';
+const FLUFF = '#f39e10';
+const MAGENTA = '#a8187e';
+const NAVY = '#1d1f86';
 const IRON = '#4a5061';
 
-/** 閻魔の冠（黒い帽子。+y 向き） */
-const HAT_P: V2[] = [
-  [0, -0.4],
-  [11.4, -0.4],
-  [12.1, 0.4],
-  [12.1, 8.9],
-  [13.3, 10],
-  [13.5, 11],
-  [12.9, 11.7],
-  [0, 11.9],
-];
 /** 金棒（手首から -y へ） */
 const CLUB: V2[] = [
   [0, -26],
@@ -67,7 +54,10 @@ const CLUB: V2[] = [
   [0, -2.8],
 ];
 
-/** ヤーマ（小鬼・閻魔）: 赤い肌に角、閻魔の冠（王の字）、虎柄のパンツと金棒、呪符 */
+/**
+ * ヤーマ（小鬼）: 黄緑の肌、外へ開いた 2 本の角（根元は灰色・先は黄色）、横に尖った耳、
+ * 半目の不敵な目（紺の瞳にマゼンタの瞳孔と目尻の影）、オレンジのもこもこの腰布。金棒はゲーム用の持ち物
+ */
 export function buildYama(opts: CharacterOpts = {}): CharacterModel {
   const kit = new Kit(opts.quality);
   const scarf = accent(opts.variant, PURPLE, [BLUE, YELLOW, GREEN]);
@@ -86,42 +76,35 @@ export function buildYama(opts: CharacterOpts = {}): CharacterModel {
   });
   const skin = kit.toon(SKIN);
 
-  // 胴（おなか・虎柄のパンツ）
+  // 胴
   const BS = new Surf(0.5, 14, 0, 15.5, 17, 14.5);
   addBody(kit, rig.torso, BS, skin);
-  const belly = new Decal(BS).ellipse({ yaw: 0, pitch: 0.02, lift: 0.12 }, 0, 0, 9, 10.5, 24, 3);
-  kit.deco(belly.build(), kit.toon(BELLY), rig.torso);
-  const pants = kit.group(rig.torso, BS.cx, BS.cy, 0);
+  // もこもこの腰布（帯＋裾の毛玉）
+  const FS = new Surf(BS.cx, BS.cy, 0, BS.rx + 1, BS.ry + 1, BS.rz + 1);
   kit.solid(
-    kit.lod('pants', (k) => bandGeo(BS.rx, BS.ry, BS.rz, -1.25, -0.42, 0.9, kit.n(28 * k, 12), 3)),
-    kit.toon(TIGER),
-    pants,
-    0,
-    0,
+    kit.lod('fluff', (k) => {
+      const list: THREE.BufferGeometry[] = [bandGeo(BS.rx, BS.ry, BS.rz, -1.25, -0.5, 1.2, kit.n(28 * k, 12), 3)];
+      const n = kit.hi ? 10 : 8;
+      for (let i = 0; i < n; i++) {
+        const yaw = (i / n) * Math.PI * 2;
+        const p = onSurf(FS, yaw, -0.62 - (i % 2) * 0.12);
+        list.push(ellGeo(3.6, 2.8, 3.4, kit.n(8 * k, 5), kit.n(5 * k, 4)).translate(p.x - BS.cx, p.y - BS.cy, p.z));
+      }
+      return merge(list);
+    }),
+    kit.toon(FLUFF),
+    rig.torso,
+    BS.cx,
+    BS.cy,
     0,
     0.7,
   );
-  const PS = new Surf(BS.cx, BS.cy, 0, BS.rx + 0.9, BS.ry + 0.9, BS.rz + 0.9);
-  const stripes = new Decal(PS);
-  for (let i = 0; i < 9; i++) {
-    const yaw = (i / 9) * Math.PI * 2 + 0.2;
-    stripes.line(
-      { yaw, pitch: -0.72, lift: 0.12, rot: 0.25 },
-      [
-        [0, 3.2],
-        [0.3, 0],
-        [-0.2, -3],
-      ],
-      taper(2.2, 0.1),
-    );
-  }
-  kit.deco(stripes.build(), kit.toon(STRIPE), rig.torso);
 
   const arms = addArms(kit, rig, { r: [4.3, 3.9, 3.7], col: SKIN, end: [4.7, 4.9, 4.5], ol: 0.75 });
   addLegs(kit, rig, { r: [5.9, 5.2, 4.6], col: SKIN, end: [7.2, 4.4, 5.8], endX: 2, ol: 0.8 });
-  // 太ももは虎柄のパンツの裾（黄色い筒）
-  const cuff = kit.lod('cuff', (k) => limbGeo(6.6, 6.1, 3.6, kit.n(14 * k, 7), 2));
-  for (const hip of [rig.fhip, rig.bhip]) kit.solid(cuff, kit.toon(TIGER), hip, 0, 0.5, 0, 0.6);
+  // 太ももの付け根も腰布の毛
+  const cuff = kit.lod('cuff', (k) => limbGeo(6.6, 6.1, 3.2, kit.n(14 * k, 7), 2));
+  for (const hip of [rig.fhip, rig.bhip]) kit.solid(cuff, kit.toon(FLUFF), hip, 0, 0.5, 0, 0.6);
 
   // 金棒（前の手）
   const club = kit.group(rig.fhand);
@@ -172,132 +155,70 @@ export function buildYama(opts: CharacterOpts = {}): CharacterModel {
   const look = addHead(kit, rig, HS, skin);
   const face = buildFace(kit, look, {
     s: HS,
-    eye: { yaw: 0.41, pitch: -0.07, w: 3.9, h: 4.8, top: '#3a1206', bot: '#ffb22e', lid: 1.0, lash: 0.9, cut: [0.8, 0.16], hl: 1.05 },
-    nose: { pitch: -0.24, w: 1.1, h: 0.8, col: '#c9442a' },
-    mouth: { pitch: -0.34, w: 3.3, kind: 'smile', thick: 0.85, open: [3.4, 3.6] },
-    blush: { yaw: 0.72, pitch: -0.28, w: 3.4, h: 2, col: '#ffb6a6' },
+    // 白目の中に紺の瞳、マゼンタの瞳孔。上が平らな半目
+    eye: { yaw: 0.4, pitch: -0.07, w: 3.2, h: 4.0, top: NAVY, bot: '#3437b0', pupil: [1.5, 1.5, -0.2, MAGENTA], white: [1.3, '#ffffff'], cut: [0.3, 0.06], lid: 1.3, hl: 0.7 },
+    nose: { pitch: -0.24, w: 1.0, h: 0.6, col: '#5f9a3a' },
+    mouth: { pitch: -0.36, w: 3.0, kind: 'smile', thick: 0.85, open: [3.4, 3.6] },
     brow: [0.4, 1.45],
   });
-  // 小さな牙（下あごから上向き）
-  const fang = new Decal(HS);
-  for (const side of [1, -1])
-    fang.fill(
-      { yaw: 0, pitch: -0.34, lift: 0.36, mirror: side < 0 },
-      [
-        [1.4, -1.1],
-        [2.6, -1.0],
-        [2.1, 0.5],
-      ],
-      [2.0, -0.6],
-      2,
-    );
-  kit.deco(fang.build(), kit.flat('#ffffff'), look);
-  // 角
-  const hornG = kit.lod('horn', (k) => coneGeo(2.6, 7.5, kit.n(12 * k, 6), 5, 0.2));
+  // いつも見えている短い眉と目尻の影（マゼンタ）
+  const paint = new Decal(HS);
   for (const side of [1, -1]) {
-    const h = kit.solid(hornG, kit.toon(HORN), look, 0, 0, 0, 0.6);
-    h.position.copy(onSurf(HS, side * 0.62, 0.68, 0.94));
-    aimY(h, surfNormal(HS, side * 0.62, 0.68).add(new THREE.Vector3(0, 0.9, 0)));
+    const at = { yaw: side * 0.4, pitch: 0.2, lift: 0.3, mirror: side < 0 };
+    paint.line(
+      at,
+      [
+        [-1.4, 0.4],
+        [1.2, -0.2],
+      ],
+      taper(1.3, 0.5),
+    );
+    paint.line(
+      { yaw: side * 0.4, pitch: -0.07, lift: 0.16, mirror: side < 0 },
+      [
+        [-4.2, 2.6],
+        [-5, 0],
+        [-4.6, -2.2],
+      ],
+      taper(1.6, 0.3),
+    );
   }
-  // 閻魔の冠（王の字・金の縁）と呪符
-  const hat = kit.group(look, -0.8, HS.cy + HS.ry * 0.7, 0);
-  hat.rotation.z = 0.16;
-  kit.solid(
-    kit.lod('hat', (k) => lathe(HAT_P, kit.n(26 * k, 12), 1, 0.96)),
-    kit.toon(HAT),
-    hat,
-    0,
-    0,
-    0,
-    0.8,
-  );
-  kit.deco(
-    kit.geo('hat-trim', () => ringGeo(12.15, 0.55, 1.1, kit.n(26, 12), 6, 1, 0.96)),
-    kit.toon(GOLD, { emissive: '#3a2800' }),
-    hat,
-    0,
-    1.3,
-    0,
-  );
-  const oh = new Decal(new Surf(0, 0, 0, 12.1, 1, 11.62, true));
-  const wang: V2[][] = [
-    [
-      [-2.8, 2.9],
-      [2.8, 2.9],
-    ],
-    [
-      [-2.2, 0.1],
-      [2.2, 0.1],
-    ],
-    [
-      [-3.3, -2.8],
-      [3.3, -2.8],
-    ],
-    [
-      [0, 2.9],
-      [0, -2.8],
-    ],
-  ];
-  for (const l of wang) oh.line({ yaw: 0.35, pitch: 5.2, lift: 0.15 }, l, 1.3);
-  kit.deco(oh.build(), kit.toon(GOLD, { emissive: '#3a2800' }), hat);
-  const fu = kit.group(hat, -3.5, 5, 11.3);
-  fu.rotation.set(0.08, 0.25, -0.12);
-  kit.solid(
-    kit.lod('fu', () =>
-      flatGeo(
-        [
-          [-2.6, 0],
-          [2.6, 0],
-          [2.6, -9.5],
-          [-2.6, -9.5],
-        ],
-        0.35,
-        0.12,
-      ),
-    ),
-    kit.toon('#fff4d8'),
-    fu,
-    0,
-    0,
-    0,
-    0.35,
-  );
-  kit.deco(
-    kit.geo('fu-mark', () =>
-      merge([
-        flatGeo(
-          [
-            [-0.45, -1.4],
-            [0.45, -1.4],
-            [0.45, -8.3],
-            [-0.45, -8.3],
-          ],
-          0.2,
-          0,
-        ),
-        xf(ringGeo(1.3, 0.35, 0.18, 12, 6), 0, -3.4, 0, Math.PI / 2, 0, 0),
-        flatGeo(
-          [
-            [-1.8, -5.4],
-            [1.8, -5.4],
-            [1.8, -6.1],
-            [-1.8, -6.1],
-          ],
-          0.2,
-          0,
-        ),
-      ]).translate(0, 0, 0.3),
-    ),
-    kit.flat('#d23636'),
-    fu,
-  );
+  kit.deco(paint.build(), kit.flat(MAGENTA), look);
+  // 角（外へ開く。根元は灰色、先は黄色）
+  const hornG = kit.lod('horn', (k) => {
+    const pts: V2[] = [
+      [0, -1],
+      [4.4, -0.6],
+      [4.3, 2.4],
+      [4.0, 5.2],
+      [3.7, 5.7],
+      [3.1, 8.6],
+      [1.9, 11.8],
+      [0.6, 14],
+      [0, 14.5],
+    ];
+    const cols = [HORN, HORN, HORN, HORN, HORN_TIP, HORN_TIP, HORN_TIP, HORN_TIP, HORN_TIP];
+    return lathe(pts, kit.n(12 * k, 6), 1, 1, cols);
+  });
+  const hornMat = kit.toon('#ffffff', { vc: true });
+  for (const side of [1, -1]) {
+    const h = kit.solid(hornG, hornMat, look, 0, 0, 0, 0.6);
+    h.position.copy(onSurf(HS, side * 0.55, 0.72, 0.93));
+    aimY(h, surfNormal(HS, side * 0.55, 0.72).add(new THREE.Vector3(0, 0.2, 0)));
+  }
+  // 横に尖った耳
+  const earG = kit.lod('ear', (k) => coneGeo(4.6, 10, kit.n(10 * k, 6), 5, 0.12, 1, 0.4));
+  for (const side of [1, -1]) {
+    const e = kit.solid(earG, skin, look, 0, 0, 0, 0.6);
+    e.position.copy(onSurf(HS, side * 1.35, 0.02, 0.92));
+    aimY(e, surfNormal(HS, side * 1.35, 0.02).add(new THREE.Vector3(0, 0.45, 0)));
+  }
 
   // 首巻き
   const sc = neckScarf(kit, rig.torso, scarf, { y: 31, x: 0.5, R: 8.8, a: 2.6, b: 3.1 });
 
   const probes: Probe[] = [
     [rig.head, 0.5, 18.5, 0, 19.5],
-    [hat, 0, 11, 0, 1],
     [rig.torso, 0.5, 14, 0, 14.5],
     [rig.ffoot, 2, 4.4, 0, 4.4],
     [rig.bfoot, 2, 4.4, 0, 4.4],
@@ -308,9 +229,6 @@ export function buildYama(opts: CharacterOpts = {}): CharacterModel {
     scarves: [{ anchor: sc.anchor, color: scarf, width: 6, length: 28 }],
     setExpression: (e) => face.set(e),
     animate(p, r) {
-      const t = p.time;
-      // 呪符がひらひら
-      fu.rotation.x = 0.08 + Math.sin(t * 0.09) * 0.12 + p.run * 0.35 + (p.air ? 0.3 : 0);
       stretchArms(r, arms, p, 0.4);
       clearHead(r, 0.75);
       groundSpin(r, probes, p);

@@ -2,15 +2,23 @@ import type { CharacterModel, CharacterOpts } from '../types';
 import { buildCat } from './cat';
 import { GREEN, PURPLE, RED } from './parts';
 
-/** セツナ（白猫・刹那）: 空色の目で元気な表情、ピンクの耳と鼻、小さな爪。空色のリボンに金の鈴 */
+/**
+ * セツナ（白猫・刹那）: ふわふわの長い毛（頬の毛）で、口まわり・手足の先・尻尾の先がくすんだ灰色、
+ * 大きな黄色い目。空色のリボンに金の鈴
+ */
 export function buildSetsuna(opts: CharacterOpts = {}): CharacterModel {
   return buildCat(opts, {
-    fur: '#fbfaff',
-    earIn: '#ffb3c8',
-    eye: { top: '#1c5a9c', bot: '#8fe2ff', pupil: [1.7, 3.2, 0.25, '#0f1d38'], cut: [0.86, 0.24], lid: 0.95, lash: 1.3, hl: 1.2 },
-    nose: '#ff8fb1',
-    blush: '#ffb0c6',
-    whisker: '#8a83a0',
+    fur: '#ececef',
+    earIn: '#f9f9fb',
+    eye: { top: '#e0b000', bot: '#ffe63a', pupil: [1.9, 2.7, 0.05, '#18181e'], lid: 1.0, hl: 1.1 },
+    nose: '#2a2a30',
+    blush: '#ee7a8a',
+    whisker: '#55556a',
+    mask: { col: '#9d9d98', w: 7.5, h: 5.2 },
+    paws: '#b9b9b6',
+    tailTip: '#a3a39e',
+    brows: '#1d1c6e',
+    tufts: true,
     ribbon: '#3aa6d9',
     alts: [RED, GREEN, PURPLE],
     claws: '#a8a1ba',

@@ -1,10 +1,17 @@
 import * as THREE from 'three';
 import { createRig } from '../rig';
 import type { CharacterModel, CharacterOpts } from '../types';
-import { accent, addHead, BLUE, buildFace, clamp01, finish, flatGeo, groundSpin, Kit, mix, neckScarf, onSurf, posIn, PURPLE, RED, Surf, Tube, YELLOW, type Probe, type V2 } from './parts';
+import { accent, addHead, BLUE, buildFace, clamp01, Decal, finish, flatGeo, groundSpin, Kit, LINE, mix, neckScarf, onSurf, posIn, PURPLE, RED, Surf, taper, Tube, YELLOW, type Probe, type V2 } from './parts';
 
 const WHITE = '#f8f7fb';
-const BELLY = '#f6d3e6';
+const BELLY = '#f1f0f6';
+const SCALE = '#c4c4cc';
+const RED_EYE = '#d8201a';
+/** 胴の灰色のひし形のウロコ（背中側の頂点をまばらに塗る） */
+const scales =
+  (every: number) =>
+  (i: number, k: number): string | null =>
+    k >= 0 && i % 2 === 0 && (k + i * 2) % every === 0 ? SCALE : null;
 
 /** 尾のムチ: 各節の長さ・太さ・休みの角度（2D と同じ「真下 = 0、前へ +」） */
 const WHIP_L = [6, 6, 6, 6, 5.5, 5.5, 5, 4.5, 4];
@@ -29,7 +36,10 @@ const TONGUE: V2[] = [
   [0, 0.45],
 ];
 
-/** オロチ（白蛇）: とぐろの上に S 字の体と大きな頭。前の腕の動きが尾のムチ、奥の腕の突きが噛みつき */
+/**
+ * オロチ（白蛇）: とぐろの上に S 字の体と大きな頭。赤い丸い目と額の赤い隈取り、胴に灰色のひし形のウロコ。
+ * 前の腕の動きが尾のムチ、奥の腕の突きが噛みつき
+ */
 export function buildOrochi(opts: CharacterOpts = {}): CharacterModel {
   const kit = new Kit(opts.quality);
   const scarf = accent(opts.variant, PURPLE, [RED, BLUE, YELLOW]);
@@ -57,7 +67,7 @@ export function buildOrochi(opts: CharacterOpts = {}): CharacterModel {
   const coilN = kit.hi ? 26 : 16;
   const coilR: number[] = [];
   for (let i = 0; i < coilN; i++) coilR.push(mix(5.2, 8.2, i / (coilN - 1)));
-  const coil = new Tube(kit, rig.body, scaled, coilR, kit.n(14, 8), 0.85, { col: BELLY, back: WHITE, half: 0.9 });
+  const coil = new Tube(kit, rig.body, scaled, coilR, kit.n(14, 8), 0.85, { col: BELLY, back: WHITE, half: 0.9, paint: scales(5) });
   coil.ref.set(0, -1, 0);
   for (let i = 0; i < coilN; i++) {
     const s = i / (coilN - 1);
@@ -70,7 +80,7 @@ export function buildOrochi(opts: CharacterOpts = {}): CharacterModel {
 
   // S 字の胴（毎フレーム、とぐろの中心から首まで）
   const BODY_R = [9.2, 9.8, 9.9, 9.6, 9.2, 8.8, 8.4, 8, 7.6, 7.2];
-  const spine = new Tube(kit, rig.body, scaled, BODY_R, kit.n(16, 10), 0.95, { col: BELLY, back: WHITE, half: 0.95 }, [0.7, 0.6]);
+  const spine = new Tube(kit, rig.body, scaled, BODY_R, kit.n(16, 10), 0.95, { col: BELLY, back: WHITE, half: 0.95, paint: (i, k) => (i < 6 ? scales(5)(i, k) : null) }, [0.7, 0.6]);
   // 尾のムチ
   const whip = new Tube(kit, rig.body, white, WHIP_R, kit.n(12, 8), 0.75, undefined, [0.5, 1.2]);
   const tip = kit.group(rig.body);
@@ -80,12 +90,25 @@ export function buildOrochi(opts: CharacterOpts = {}): CharacterModel {
   const look = addHead(kit, rig, HS, white);
   const face = buildFace(kit, look, {
     s: HS,
-    eye: { yaw: 0.4, pitch: 0.0, w: 3.7, h: 4.5, top: '#6e0d1c', bot: '#ff5468', pupil: [0.9, 3.3, 0.2, '#2a0510'], lid: 0.85, lash: 0.8, hl: 1.05 },
-    nose: { pitch: -0.12, w: 0.6, h: 0.45, col: '#c9a3b8' },
-    mouth: { pitch: -0.33, w: 4.2, kind: 'smile', thick: 0.8, open: [3.6, 3.4] },
-    blush: { yaw: 0.7, pitch: -0.25, w: 3.4, h: 2, col: '#ffb3cc' },
+    // 赤い丸い目（瞳なし、白いハイライトだけ）と目尻の小さなまつげ
+    eye: { yaw: 0.42, pitch: 0.0, w: 3.6, h: 4.2, top: RED_EYE, bot: '#e8321f', lash: 1.0, lid: 0.5, hl: 1.25, shut: '#b01a14' },
+    mouth: { pitch: -0.3, w: 2.4, kind: 'w', thick: 0.75, open: [3.6, 3.4] },
     brow: [0.45, 1.3],
   });
+  // 鼻の穴（2 つの点）と額の赤い隈取り（斜めの一筆）
+  const marks = new Decal(HS);
+  for (const side of [1, -1]) marks.ellipse({ yaw: side * 0.07, pitch: -0.13, lift: 0.3, mirror: side < 0 }, 0, 0, 0.45, 0.45, 8, 1);
+  kit.deco(marks.build(), kit.flat(LINE), look);
+  const kuma = new Decal(HS).line(
+    { yaw: 0.02, pitch: 0.4, lift: 0.3 },
+    [
+      [-3.2, -4.4],
+      [-0.5, -0.5],
+      [2.8, 4.4],
+    ],
+    taper(2.8, 0.35),
+  );
+  kit.deco(kuma.build(), kit.flat(RED_EYE), look);
   // 鼻の穴（2 つ）はデカールの鼻で代用。舌（攻撃時・ときどきチロリ）
   const tongue = kit.deco(
     kit.geo('tongue', () => flatGeo(TONGUE, 0.5, 0.15)),

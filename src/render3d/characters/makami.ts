@@ -6,13 +6,13 @@ import {
   addArms,
   addBody,
   addHead,
+  addTufts,
   addLegs,
   BLUE,
   buildFace,
   clamp01,
   clawsGeo,
   clearHead,
-  coneGeo,
   Decal,
   earInnerGeo,
   ellGeo,
@@ -31,10 +31,11 @@ import {
   type V2,
 } from './parts';
 
-const FUR = '#aeb8ca';
-const DARK = '#838ea6';
+const FUR = '#7e7e8a';
+const DARK = '#72727e';
 const WHITE = '#f5f7fb';
-const EAR_IN = '#f3c3d0';
+const EAR_IN = '#f5f7fb';
+const NAVY = '#1d1f86';
 const ASTER = '#7b52c9';
 
 /** 尖った耳（+y 向き） */
@@ -65,7 +66,10 @@ const TAIL: [number, number, Col][] = [
   [0, 22.6, WHITE],
 ];
 
-/** マカミ（オオカミ）: 銀灰色の毛に白いマズル・胸、尖った耳、ふさふさの尻尾。紫苑色のマフラーにアザミの飾り */
+/**
+ * マカミ（オオカミ）: 灰色の毛に白いマズル・頬・胸・手足の先、白い点の眉、内側が白い尖った耳、
+ * 黄色い目と紺の鼻、ふさふさの尻尾。紫苑色のマフラー
+ */
 export function buildMakami(opts: CharacterOpts = {}): CharacterModel {
   const kit = new Kit(opts.quality);
   const scarf = accent(opts.variant, ASTER, [RED, BLUE, YELLOW]);
@@ -133,7 +137,7 @@ export function buildMakami(opts: CharacterOpts = {}): CharacterModel {
   );
   const nose = kit.solid(
     kit.lod('nose', (k) => ellGeo(2.4, 1.8, 2.9, kit.n(12 * k, 6), kit.n(9 * k, 5))),
-    kit.toon('#26212f'),
+    kit.toon(NAVY),
     look,
     0,
     0,
@@ -152,11 +156,15 @@ export function buildMakami(opts: CharacterOpts = {}): CharacterModel {
   const face = buildFace(kit, look, {
     s: HS,
     ms: SN,
-    eye: { yaw: 0.43, pitch: 0.07, w: 3.6, h: 4.4, top: '#8a4b00', bot: '#ffd13d', pupil: [1.6, 2.2, 0.25, '#1a1020'], cut: [0.6, 0.3], lid: 1.05, hl: 1.0 },
+    eye: { yaw: 0.43, pitch: 0.07, w: 3.8, h: 4.4, top: '#f2c400', bot: '#ffe45a', pupil: [1.9, 2.6, 0.1, NAVY], cut: [0.5, 0.25], lid: 1.2, hl: 0.8 },
     mouth: { pitch: -0.28, w: 2.2, kind: 'w', thick: 0.75, open: [3.2, 2.8] },
-    blush: { yaw: 0.78, pitch: -0.2, w: 3.2, h: 1.9, col: '#ffb0c0' },
     brow: [0.3, 1.45],
   });
+  // 白い点の眉（麻呂眉）と頬の白い毛
+  const dots = new Decal(HS);
+  for (const side of [1, -1]) dots.ellipse({ yaw: side * 0.36, pitch: 0.4, rot: 0.35, lift: 0.2, mirror: side < 0 }, 0, 0, 1.9, 1.1, 12, 1);
+  kit.deco(dots.build(), kit.toon(WHITE), look);
+  addTufts(kit, look, HS, WHITE, { yaw: 1.25, pitch: -0.4, len: 6, wid: 8, spikes: 3, tilt: -0.3 });
   // 耳
   const earG = kit.lod('ear', (k) => lathe(EAR, kit.n(12 * k, 6), 0.55, 1));
   const earIn = kit.geo('ear-in', () => earInnerGeo(EAR, 1, 12.5, kit.n(10, 6), 0.55, 1, 0.6));
@@ -171,29 +179,8 @@ export function buildMakami(opts: CharacterOpts = {}): CharacterModel {
     ears.push(e);
   }
 
-  // マフラーとアザミの飾り
+  // マフラー
   const sc = neckScarf(kit, rig.torso, scarf, { y: 31.4, x: 0.5, R: 9.2, a: 2.7, b: 3.2 });
-  const pin = kit.group(sc.ring.parent as THREE.Object3D);
-  const pa = 0.95;
-  pin.position.set(Math.cos(pa) * 11.4, 0.6, Math.sin(pa) * 11.4);
-  kit.solid(
-    kit.lod('thistle', () => new THREE.IcosahedronGeometry(2.2, 0)),
-    kit.toon('#c95ad8'),
-    pin,
-    0,
-    0.9,
-    0,
-    0.45,
-  );
-  kit.solid(
-    kit.lod('calyx', (k) => coneGeo(1.6, 2.2, kit.n(8 * k, 5), 3, 0.3)),
-    kit.toon('#4f9a4a'),
-    pin,
-    0,
-    -1.4,
-    0,
-    0.4,
-  );
 
   const probes: Probe[] = [
     [rig.head, 1, 20, 0, 21],
