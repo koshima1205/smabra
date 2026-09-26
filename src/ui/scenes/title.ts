@@ -75,12 +75,13 @@ export class TitleScene implements Scene {
       'div',
       { class: 'screen title' },
       h('h1', { class: 'logo' }, 'CNP乱舞'),
-      h('div', { class: 'logo-sub' }, 'CRYPTONINJA PARTNERS RANBU'),
+      // 公式の「CNP○○」と誤認されないよう、ロゴのすぐ下で非公式と示す（CNP 二次創作ガイドライン「誤認防止」）
+      h('div', { class: 'logo-sub' }, '非公式ファンゲーム'),
       h('p', { class: 'tagline' }, `CNP と月蝕綺譚の ${FIGHTERS.length}体が 3D で入り乱れて戦う — CNP のパートナー忍者の設定は MCP サーバー「${ROSTER_META.mcp.server}」から取得`),
       h('div', { class: 'press-start blink' }, 'PRESS START'),
       h('div', { class: 'menu' }, ...this.buttons),
       h('p', { class: 'hint', style: 'margin-top:14px' }, 'クリック・タップ、または W/S・↑↓ で選んで J / Space / A で決定'),
-      h('div', { class: 'footer-note' }, '非公式ファンゲームです。CNP（CryptoNinja Partners）・CryptoNinja は Ninja DAO / イケハヤ氏の IP です。3D モデルは本作オリジナルの手続き生成です。'),
+      h('div', { class: 'footer-note' }, '非公式・非営利のファンゲームです。CNP・CryptoNinja・月蝕綺譚の公式とは関係ありません。キャラクターの権利は各権利者に帰属します。'),
     );
     this.app.ui.append(root);
     this.updateFocus();
@@ -194,6 +195,7 @@ export class TitleScene implements Scene {
   private openCredits(): void {
     const meta = ROSTER_META;
     const mcpCount = FIGHTERS.filter((f) => f.partnerInMcp).length;
+    const link = (href: string, text: string) => h('a', { href, target: '_blank', rel: 'noopener' }, text);
     this.showModal(
       h(
         'div',
@@ -223,27 +225,45 @@ export class TitleScene implements Scene {
           {},
           'CryptoNinja 外伝「月蝕綺譚」の御霊も参戦しています（',
           FIGHTERS.filter((f) => f.series === 'kitan')
-            .map((f) => `${f.name}（${f.clan}・${f.element ?? ''}）`)
+            .map((f) => {
+              // 里・五行の無い御霊（道しるべの栞）は名前だけ
+              const tags = [f.clan, f.element].filter(Boolean).join('・');
+              return tags ? `${f.name}（${tags}）` : f.name;
+            })
             .join('、'),
           '）。3D モデルは月蝕綺譚の二次創作「3Dの間」で配布されている公式モデル（ゲーム版 GLB）を、',
-          h('a', { href: 'https://vibe.co.jp/luna-occulta/fanworks', target: '_blank', rel: 'noopener' }, '二次創作ガイドライン'),
+          link('https://vibe.co.jp/luna-occulta/fanworks', '二次創作ガイドライン'),
           'に沿って組み込み、このゲームの骨格に付け直して動かしています。里・五行・忍術の名前は公式の正典シートの公開情報から、説明文と性能は本作オリジナルです。',
         ),
         h('h3', {}, 'データ出典'),
-        h('p', {}, h('a', { href: meta.credit.url, target: '_blank', rel: 'noopener' }, meta.credit.title), `（${meta.credit.author}）— NINJAMCP 経由。MCP に載っていないパートナー関係（ルナ・マカミ・トワ・セツナ）は CNP 公式の公開情報より。`),
+        h('p', {}, link(meta.credit.url, meta.credit.title), `（${meta.credit.author}）— NINJAMCP 経由。MCP に載っていないパートナー関係（ルナ・マカミ・トワ・セツナ）は CNP 公式の公開情報より。`),
         h('h3', {}, 'ライセンス・ガイドライン'),
         h(
           'ul',
           {},
-          h('li', {}, 'CNP（CryptoNinja Partners）・CryptoNinja は Ninja DAO / イケハヤ氏による IP です。本作は非公式・非営利のファンメイド作品で、公式とは関係ありません。二次創作の範囲は公式の利用ガイドラインをご確認ください。'),
-          h('li', {}, 'CNP 9体の 3D モデル・ステージは本作オリジナルの手続き生成です（公式イラストは使用・同梱していません）。'),
+          h(
+            'li',
+            {},
+            '本作は非公式・非営利のファンメイド作品で、CNP・CryptoNinja の公式とは関係ありません（販売・収益化はしていません）。キャラクターの権利は各権利者にあります（CNP: © CryptoNinja Partners ／ CryptoNinja: © Ninja DAO）。二次創作のルールは ',
+            link('https://www.cryptoninja-partners.xyz/fanart-guideline.html', 'CNP 二次創作ガイドライン'),
+            '・',
+            link('https://www.ninja-dao.com/guidelines', 'CryptoNinja 利用ガイドライン'),
+            ' をご確認ください。',
+          ),
+          h(
+            'li',
+            {},
+            'CNP 9体の 3D モデルは本作で手続き生成したもので、公式イラストは使用・同梱していません。見た目は素材屋CNP のイラスト 9 点（1体1点）を AI に読み込ませて寄せました（',
+            link('https://sozaiya.cryptoninja-partners.xyz/guidelines', '素材屋CNP の AI 生成ガイドライン'),
+            'の上限「合計10点まで」の範囲内）。キャラクターのデザインの権利は元のイラストの制作者と CNP にあります。',
+          ),
           h(
             'li',
             {},
             '月蝕綺譚 -Luna Occulta-（Studio VIBE）の御霊の 3D モデルは公式の配布モデルです。本作は月蝕綺譚の公式とも関係のない非公式ファンメイドで、モデル単体の再配布はできません。#月蝕綺譚',
           ),
           h('li', {}, 'NINJAMCP（MIT License）: github.com/omikirin/mcp ／ three.js（MIT License）'),
-          h('li', {}, 'ゲームのプログラム・演出・効果音はすべて本作オリジナル（手続き生成）です。'),
+          h('li', {}, 'ゲームのプログラム・ステージ・演出・効果音・BGM は本作オリジナル（手続き生成）です。'),
         ),
         h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => this.closeModal() }, 'とじる')),
       ),
