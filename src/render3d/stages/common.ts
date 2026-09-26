@@ -43,6 +43,9 @@ export class Kit {
   private readonly shared = new Set<THREE.Material>();
   private readonly ups: Updater[] = [];
   private glowT: THREE.Texture | null = null;
+  private fogObj: THREE.Fog | null = null;
+  private fogNear = 0;
+  private fogFar = 0;
 
   constructor(
     readonly quality: Quality,
@@ -98,6 +101,24 @@ export class Kit {
     this.ups.push(fn);
   }
 
+  /**
+   * 霧。near / far は遊ぶ平面（z = 0）から奥への距離。カメラはズームで大きく前後するので、
+   * 毎フレーム カメラ距離を足して、足場やファイターには霧がかからないようにする（syncFog）。
+   */
+  fog(color: THREE.ColorRepresentation, near: number, far: number): THREE.Fog {
+    this.fogObj = new THREE.Fog(color, near + 2000, far + 2000);
+    this.fogNear = near;
+    this.fogFar = far;
+    return this.fogObj;
+  }
+
+  syncFog(cam: THREE.Camera): void {
+    const f = this.fogObj;
+    if (!f) return;
+    f.near = cam.position.z + this.fogNear;
+    f.far = cam.position.z + this.fogFar;
+  }
+
   /** 柔らかい光の玉（白。色はマテリアル側で付ける） */
   glowTex(): THREE.Texture {
     if (!this.glowT) {
@@ -130,13 +151,16 @@ export class Kit {
       dispose: () => {
         if (!alive) return;
         alive = false;
-        // 登録漏れも拾う（ジオメトリはステージ専用）
+        // 登録漏れも拾う（ジオメトリはステージ専用）。InstancedMesh はインスタンス行列、ライトは影のバッファも解放
+        const owners: { dispose(): void }[] = [];
         this.group.traverse((obj) => {
           const m = obj as THREE.Mesh;
+          if ((obj as THREE.InstancedMesh).isInstancedMesh || (obj as THREE.Light).isLight) owners.push(obj as THREE.InstancedMesh | THREE.Light);
           if (m.geometry) this.geos.add(m.geometry);
           const mm = m.material;
           if (mm) for (const x of Array.isArray(mm) ? mm : [mm]) if (!this.shared.has(x)) this.mats.add(x);
         });
+        for (const o2 of owners) o2.dispose();
         for (const g of this.geos) g.dispose();
         for (const m of this.mats) if (!this.shared.has(m)) m.dispose();
         for (const t of this.texs) t.dispose();
@@ -779,6 +803,8 @@ export function skyPlane(kit: Kit, stops: [number, THREE.ColorRepresentation][],
   const m = kit.mesh(g, kit.basic({ vertexColors: true, fog: false, dithering: true, depthWrite: false }));
   m.name = 'sky';
   m.renderOrder = -10;
+  // 最初に描かれる（不透明・renderOrder 最小）ので、ここで霧をカメラ距離に合わせる
+  m.onBeforeRender = (_r, _s, cam) => kit.syncFog(cam);
   return m;
 }
 

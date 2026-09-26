@@ -34,12 +34,14 @@ export default defineConfig(({ mode }) => ({
     mode === 'single'
       ? {
           outDir: 'dist-single',
+          // three.js を含むので1ファイルは大きめ（gzip で約 250KB）
+          chunkSizeWarningLimit: 1200,
           assetsInlineLimit: 100_000_000,
           cssCodeSplit: false,
           modulePreload: false,
           rollupOptions: { output: { inlineDynamicImports: true } },
         }
-      : { outDir: 'dist' },
+      : { outDir: 'dist', chunkSizeWarningLimit: 1200 },
   plugins: mode === 'single' ? [inlineAll()] : [],
   test: {
     include: ['tests/**/*.test.ts'],

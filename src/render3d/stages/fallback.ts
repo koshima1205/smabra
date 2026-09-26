@@ -45,6 +45,6 @@ export function buildFallback(stage: StageDef, quality: Quality): StageInstance 
   return kit.finish({
     sun,
     background: new THREE.Color('#9ec2e8'),
-    fog: new THREE.Fog('#cfe0f0', 5200, 19000),
+    fog: kit.fog('#cfe0f0', 3000, 16800),
   });
 }

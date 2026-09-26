@@ -43,7 +43,11 @@ test('title → select → stage → battle', async ({ page }) => {
     await page.waitForTimeout(120);
   }
   await page.keyboard.press('Space');
-  await page.waitForTimeout(1500);
+  // ソフトウェア描画の環境では実時間より遅く進むので、時間ではなくフレーム数で待つ
+  await page.waitForFunction(() => {
+    const app = (window as unknown as { __ninja: DebugApp }).__ninja;
+    return (app.scene?.match?.frame ?? 0) > 200;
+  }, undefined, { timeout: 60_000 });
   await page.screenshot({ path: 'test-results/04-battle.png' });
 
   const state = await page.evaluate(() => {

@@ -41,7 +41,7 @@ export function buildTenkai(stage: StageDef, quality: Quality): StageInstance {
   const rng = new Rng(0x7e4);
 
   sky(kit);
-  cloudSea(kit, rng);
+  cloudSea(kit);
   torii(kit);
   islands(kit, rng);
   mainStage(kit, stage);
@@ -81,7 +81,7 @@ export function buildTenkai(stage: StageDef, quality: Quality): StageInstance {
   return kit.finish({
     sun,
     background: new THREE.Color('#e9cfd6'),
-    fog: new THREE.Fog('#f5dcc8', 4600, 19000),
+    fog: kit.fog('#f5dcc8', 2400, 16800),
   });
 }
 
@@ -264,8 +264,7 @@ function paintCloudStrip(g: CanvasRenderingContext2D, w: number, h: number, seed
   });
 }
 
-function cloudSea(kit: Kit, rng: Rng): void {
-  void rng;
+function cloudSea(kit: Kit): void {
   const texA = canvasTex(kit, 1024, 512, (g, w, h) => paintCloudStrip(g, w, h, 11), { repeat: true });
   const texB = canvasTex(kit, 1024, 512, (g, w, h) => paintCloudStrip(g, w, h, 29), { repeat: true });
   texA.wrapT = THREE.ClampToEdgeWrapping;

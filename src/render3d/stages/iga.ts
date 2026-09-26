@@ -77,7 +77,7 @@ export function buildIga(stage: StageDef, quality: Quality): StageInstance {
   return kit.finish({
     sun,
     background: new THREE.Color('#1a1a3e'),
-    fog: new THREE.Fog(HAZE, 4200, 17000),
+    fog: kit.fog(HAZE, 2000, 14800),
   });
 }
 
@@ -272,7 +272,8 @@ function mountains(kit: Kit, rng: Rng): void {
 /** 谷の城下町（家並みと窓の灯り、霧） */
 function valley(kit: Kit, rng: Rng): void {
   const floorY = -1750;
-  const g = terrain(-15000, 15000, -7800, -1600, kit.high ? 80 : 40, 16, floorY, (x, z) => 60 * Math.sin(x * 0.0011 + z * 0.0007) + 40 * Math.sin(x * 0.0023));
+  // 手前（カメラの下）まで続く谷底。縦長画面で大きく引いたときの下側を埋める
+  const g = terrain(-15000, 15000, -7800, 12000, kit.high ? 80 : 40, 24, floorY, (x, z) => 60 * Math.sin(x * 0.0011 + z * 0.0007) + 40 * Math.sin(x * 0.0023) - 900 * smooth(-1200, 6000, z));
   const b = new Batch(kit);
   b.add(g, '#191a3a');
   b.build(kit.vtoon(), { shade: haze('#2e2c5a', 2000, 7500, 0.8) });

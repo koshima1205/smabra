@@ -101,7 +101,7 @@ export function buildNenokuni(stage: StageDef, quality: Quality): StageInstance 
   return kit.finish({
     sun,
     background: new THREE.Color('#1c0714'),
-    fog: new THREE.Fog('#2a0c1e', 4200, 16500),
+    fog: kit.fog('#2a0c1e', 2000, 14300),
   });
 }
 
@@ -692,10 +692,12 @@ function slabs(kit: Kit, st: StageDef): void {
     // 鎖（奥の上へ）
     for (const sx of [-1, 1]) {
       const ax = sx * (w / 2 - 22);
+      // 床の上には出さない金具（上面と面一）。鎖は遊ぶ帯（z > -70）より奥から
+      b.box(26, 12, 16, '#2a2028', ax, -6, -70);
       const links = kit.high ? 52 : 30;
       for (let k = 0; k < links; k++) {
-        const y = 10 + k * 26;
-        const zz = -48 - Math.min(k, 12) * 7;
+        const y = 4 + k * 26;
+        const zz = -76 - Math.min(k, 12) * 6;
         b.add(new THREE.TorusGeometry(8, 2.2, 4, 8), '#5a4e58', mat4(ax, y, zz, 0, k % 2 ? Math.PI / 2 : 0, 0));
       }
     }

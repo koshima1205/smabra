@@ -62,7 +62,7 @@ export function buildSaika(stage: StageDef, quality: Quality): StageInstance {
   return kit.finish({
     sun,
     background: new THREE.Color('#2a2052'),
-    fog: new THREE.Fog('#d98a7c', 5200, 19000),
+    fog: kit.fog('#d98a7c', 3000, 16800),
   });
 }
 
@@ -213,12 +213,14 @@ function seaGeo(nx: number, nz: number): THREE.BufferGeometry {
     const u = (i / nx) * 2 - 1;
     xs.push(Math.sign(u) * Math.pow(Math.abs(u), 1.8) * 17500);
   }
+  // 手前はカメラの真下まで（縦長画面で大きく引いたとき、海の手前の端が見えないように）
+  zs.push(14000, 7000, 3800);
   for (let j = 0; j <= nz; j++) zs.push(1700 - 11400 * Math.pow(j / nz, 1.6));
   const pos: number[] = [];
-  for (const z of zs) for (const x of xs) pos.push(x, SEA_Y - 2.35e-5 * Math.pow(Math.max(0, -z - 700), 2), z);
+  for (const z of zs) for (const x of xs) pos.push(x, seaY(z), z);
   const idx: number[] = [];
   const cols = nx + 1;
-  for (let j = 0; j < nz; j++) {
+  for (let j = 0; j < zs.length - 1; j++) {
     for (let i = 0; i < nx; i++) {
       const a = j * cols + i;
       idx.push(a, a + 1, a + cols, a + 1, a + cols + 1, a + cols);
@@ -275,9 +277,12 @@ function sea(kit: Kit): void {
   });
 }
 
-/** 点の y を海面の高さに合わせる（遠いほど下がる） */
+/**
+ * 海面の高さ。遠いほど下がる（水平線の丸み）。
+ * カメラの下（z > 1700、普段は映らない）は手前へ下り坂にして、大きく引いたときも近クリップの手前で海が切れないように。
+ */
 function seaY(z: number): number {
-  return SEA_Y - 2.35e-5 * Math.pow(Math.max(0, -z - 700), 2);
+  return SEA_Y - 2.35e-5 * Math.pow(Math.max(0, -z - 700), 2) - 0.25 * Math.max(0, z - 1700);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -778,20 +783,32 @@ function flags(kit: Kit, list: [number, number, number][]): void {
     cloths.push({ geo: g, base, ph: i * 2.3 });
   });
   poles.build(kit.vtoon());
+  // 波打つ布: z = sin(φ)·10u（φ = 時間 + y + 3u）。法線は式の微分から（毎フレームの割り当てなし）
   kit.onUpdate((frame) => {
     for (const c of cloths) {
       const p = c.geo.getAttribute('position') as THREE.BufferAttribute;
+      const nrm = c.geo.getAttribute('normal') as THREE.BufferAttribute;
       const a = p.array as Float32Array;
+      const na = nrm.array as Float32Array;
+      const x0 = c.base[0];
       for (let k = 0; k < p.count; k++) {
         const bx = c.base[k * 3];
         const by = c.base[k * 3 + 1];
-        const x0 = c.base[0];
         const u = Math.max(0, bx - x0) / 70;
-        a[k * 3 + 2] = c.base[k * 3 + 2] + Math.sin(frame * 0.09 + by * 0.02 + u * 3 + c.ph) * 10 * u;
+        const ph = frame * 0.09 + by * 0.02 + u * 3 + c.ph;
+        const sn = Math.sin(ph);
+        const cs = Math.cos(ph);
+        a[k * 3 + 2] = c.base[k * 3 + 2] + sn * 10 * u;
         a[k * 3] = bx - u * u * 6 * (1 + Math.sin(frame * 0.05 + c.ph));
+        const dx = (cs * 30 * u + sn * 10) / 70;
+        const dy = cs * 0.2 * u;
+        const l = Math.sqrt(dx * dx + dy * dy + 1);
+        na[k * 3] = -dx / l;
+        na[k * 3 + 1] = -dy / l;
+        na[k * 3 + 2] = 1 / l;
       }
       p.needsUpdate = true;
-      c.geo.computeVertexNormals();
+      nrm.needsUpdate = true;
     }
   });
 }
