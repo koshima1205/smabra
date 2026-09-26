@@ -181,7 +181,7 @@ export class TitleScene implements Scene {
         ['必殺ワザ', keys(k1.special[0]), keys(k2.special[0])],
         ['ガード・回避', keys(k1.shield[0]), keys(k2.shield[0])],
         ['つかみ', keys(k1.grab[0]), keys(k2.grab[0])],
-        ['ポーズ', keys(k1.start[0]), '—'],
+        ['スタート・ポーズ', keys(k1.start[0]), '—'],
       ],
     );
     const pad = table(
@@ -194,7 +194,7 @@ export class TitleScene implements Scene {
         ['必殺ワザ', 'B'],
         ['ガード・回避', 'R・ZL・ZR'],
         ['つかみ', 'L'],
-        ['ポーズ', 'START'],
+        ['スタート・ポーズ', 'START'],
       ],
     );
     const touch = table(

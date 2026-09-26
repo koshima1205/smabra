@@ -1,5 +1,5 @@
 import { audio } from '../../core/audio';
-import { CLAN_COLOR, FIGHTERS, fighterById } from '../../game/roster';
+import { FIGHTERS, fighterById } from '../../game/roster';
 import type { FighterSpec } from '../../game/types';
 import { CPU_COLOR, PORT_COLORS } from '../../render/overlay';
 import { sfx, type App, type Scene } from '../app';
@@ -18,7 +18,8 @@ export class SelectScene implements Scene {
   private cards: HTMLElement[] = [];
   private visible: number[] = [];
   private slotEls: HTMLElement[] = [];
-  private readyEl: HTMLElement | null = null;
+  /** 全員が決めたら出る「いざ、勝負」ボタン（見出しの行の右端） */
+  private startBtn!: HTMLButtonElement;
   private editing = 0;
   private stocksEl!: HTMLElement;
   private timeEl!: HTMLElement;
@@ -38,6 +39,7 @@ export class SelectScene implements Scene {
     this.stocksEl = h('b', {}, String(app.rules.stocks));
     this.timeEl = h('b', {}, this.timeLabel());
     this.grid = h('div', { class: 'grid' });
+    this.startBtn = h('button', { class: 'btn primary start-btn', title: 'Enter / START でも進めます', onclick: () => this.proceed() }, 'いざ、勝負 ▶');
     const slots = h('div', { class: 'slots' });
     this.slotEls = app.slots.map((_, i) => {
       const el = h('div', { class: 'slot', onclick: () => this.setEditing(i) });
@@ -56,13 +58,13 @@ export class SelectScene implements Scene {
         h(
           'div',
           { class: 'rules' },
-          h('span', { class: 'pill', title: 'ストック＝残りの命の数。場外にふっとばされるたびに1つ減り、0になったら負け' }, 'ストック',h('button', { onclick: () => this.stocks(-1), 'aria-label': 'ストックを減らす' }, '−'), this.stocksEl, h('button', { onclick: () => this.stocks(1), 'aria-label': 'ストックを増やす' }, '＋')),
-          h('span', { class: 'pill', title: '時間切れで試合終了。「∞」なら時間の制限なし' }, '時間',h('button', { onclick: () => this.time(-1), 'aria-label': '時間を減らす' }, '−'), this.timeEl, h('button', { onclick: () => this.time(1), 'aria-label': '時間を増やす' }, '＋')),
+          h('span', { class: 'pill', title: 'ストック＝残りの命の数。場外にふっとばされるたびに1つ減り、0になったら負け' }, 'ストック', h('button', { onclick: () => this.stocks(-1), 'aria-label': 'ストックを減らす' }, '−'), this.stocksEl, h('button', { onclick: () => this.stocks(1), 'aria-label': 'ストックを増やす' }, '＋')),
+          h('span', { class: 'pill', title: '時間切れで試合終了。「∞」なら時間の制限なし' }, '時間', h('button', { onclick: () => this.time(-1), 'aria-label': '時間を減らす' }, '−'), this.timeEl, h('button', { onclick: () => this.time(1), 'aria-label': '時間を増やす' }, '＋')),
         ),
+        this.startBtn,
       ),
       h('div', { class: 'grid-wrap' }, this.grid),
       slots,
-      h('div', { class: 'hint' }, '決定: J / Space / A ｜ 戻る: K / Esc / B ｜ 開始: Enter / START ｜ 2P はキーボードの , . / キーかパッドのボタンで参加 ｜ スロットをクリックして CPU のキャラも選べます'),
     );
     app.ui.append(root);
     app.onUnclaimed = (id) => this.join(id);
@@ -136,8 +138,7 @@ export class SelectScene implements Scene {
           onmouseenter: () => this.hover(idx),
         },
         portraitEl(spec, 120),
-        h('span', { class: 'clan-dot', style: `background:${CLAN_COLOR[spec.clan] ?? '#888'}` }),
-        h('div', { class: 'nm' }, spec.name, h('small', {}, spec.species)),
+        h('div', { class: 'nm' }, spec.name),
         h('div', { class: 'cursors' }),
       );
       this.grid.append(card);
@@ -265,63 +266,7 @@ export class SelectScene implements Scene {
     const por = h('div', { class: 'por' });
     if (spec) por.append(portraitEl(spec, 160));
     else por.append(h('div', { class: 'card random', style: 'position:absolute;inset:0;border:none' }, '？'));
-    const info = h('div', { class: 'info' }, head);
-    if (spec) {
-      info.append(
-        h('div', { class: 'cname' }, spec.name, h('small', {}, spec.nameEn)),
-        h('div', { class: 'meta' }, ` ${spec.blurb}`),
-        spec.partner
-          ? h(
-              'div',
-              { class: 'partner' },
-              h('span', { style: `color:${CLAN_COLOR[spec.clan] ?? '#ccc'}` }, '●'),
-              ` パートナー: ${spec.partner.name}（${spec.partner.clan}）`,
-              spec.partner.ninjutsu ? ` ・ 忍術「${spec.partner.ninjutsu}」` : '',
-              spec.partner.weapon ? ` ・ 得物「${spec.partner.weapon}」` : '',
-              spec.partnerInMcp ? h('span', { class: 'mcp', title: 'NINJAMCP の忍者設定にパートナーとして記載' }, 'MCP') : '',
-            )
-          : spec.series === 'kitan'
-            ? h(
-                'div',
-                { class: 'partner' },
-                h('span', { style: `color:${CLAN_COLOR[spec.clan] ?? '#ccc'}` }, '●'),
-                ` 月蝕綺譚の御霊（${spec.clan}・${spec.element ?? ''}）`,
-                spec.ninjutsu ? ` ・ 忍術「${spec.ninjutsu}」` : '',
-              )
-            : '',
-        h('div', { class: 'tags' }, ...spec.tags.map((t) => h('span', { class: 'tag' }, t))),
-        h(
-          'div',
-          { class: 'bars' },
-          ...(
-            [
-              ['パワー', spec.ratings.power],
-              ['スピード', spec.ratings.speed],
-              ['重さ', spec.ratings.weight],
-              ['リーチ', spec.ratings.range],
-              ['復帰力', spec.ratings.recovery],
-            ] as [string, number][]
-          ).flatMap(([l, v]) => [h('span', {}, l), h('div', { class: 'bar' }, h('i', { style: `width:${v * 20}%` }))]),
-        ),
-        h(
-          'div',
-          { class: 'specials' },
-          h('b', {}, 'B '),
-          spec.moves.nspec.name,
-          ' / ',
-          h('b', {}, '横B '),
-          spec.moves.sspec.name,
-          h('br'),
-          h('b', {}, '上B '),
-          spec.moves.uspec.name,
-          ' / ',
-          h('b', {}, '下B '),
-          spec.moves.dspec.name,
-        ),
-      );
-    } else {
-      info.append(h('div', { class: 'cname' }, 'おまかせ'), h('div', { class: 'meta' }, '開始時にランダムで決まります'));
-    }
+    const info = h('div', { class: 'info' }, head, h('div', { class: 'cname' }, spec ? spec.name : 'おまかせ'));
     if (s.kind === 'cpu') {
       info.append(
         h(
@@ -352,13 +297,8 @@ export class SelectScene implements Scene {
 
   private refreshReady(): void {
     const ready = this.isReady();
-    if (ready && !this.readyEl) {
-      this.readyEl = h('div', { class: 'ready', onclick: () => this.proceed() }, 'いざ、勝負', h('small', {}, 'クリック / Enter / START でステージ選択へ'));
-      this.app.ui.firstElementChild?.append(this.readyEl);
-    } else if (!ready && this.readyEl) {
-      this.readyEl.remove();
-      this.readyEl = null;
-    }
+    this.startBtn.classList.toggle('ready', ready);
+    this.startBtn.disabled = !ready;
   }
 
   private proceed(): void {
