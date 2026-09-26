@@ -13,6 +13,53 @@ import { h } from '../dom';
 import { KEY_LAYOUTS } from '../../core/input';
 import { SelectScene } from './select';
 
+/** モーダルの見出しつきの区切り */
+function section(title: string, ...body: (Node | string | null)[]): HTMLElement {
+  return h('section', { class: 'sheet' }, h('h3', {}, title), ...body);
+}
+
+/** 見出し行つきの表（各行の1列目は行の見出し）。狭い画面では横にスクロール */
+function table(head: string[], rows: (Node | string)[][]): HTMLElement {
+  return h(
+    'div',
+    { class: 'table-wrap' },
+    h(
+      'table',
+      { class: 'sheet-table' },
+      h('thead', {}, h('tr', {}, ...head.map((t) => h('th', { scope: 'col' }, t)))),
+      h('tbody', {}, ...rows.map((r) => h('tr', {}, ...r.map((c, i) => (i === 0 ? h('th', { scope: 'row' }, c) : h('td', {}, c)))))),
+    ),
+  );
+}
+
+/** 用語と説明の並び */
+function terms(items: [string, string][]): HTMLElement {
+  return h('dl', { class: 'terms' }, ...items.flatMap(([t, d]) => [h('dt', {}, t), h('dd', {}, d)]));
+}
+
+const KEY_NAMES: Record<string, string> = {
+  Space: 'スペース',
+  Escape: 'Esc',
+  ArrowUp: '↑',
+  ArrowLeft: '←',
+  ArrowDown: '↓',
+  ArrowRight: '→',
+  Comma: ',',
+  Period: '.',
+  Slash: '/',
+  Semicolon: ';',
+  Quote: "'",
+};
+
+/** キーのコード（KeyW・ArrowUp など）をキートップの形で並べる */
+function keys(...codes: string[]): HTMLElement {
+  return h('span', { class: 'keycaps' }, ...codes.map((c) => h('kbd', {}, KEY_NAMES[c] ?? c.replace(/^Key|^Digit/, ''))));
+}
+
+function link(href: string, text: string): HTMLElement {
+  return h('a', { href, target: '_blank', rel: 'noopener' }, text);
+}
+
 /** 背景で CPU 同士が戦うデモ */
 export function demoMatch(seed: number): Match {
   const rng = new Rng(seed);
@@ -41,6 +88,8 @@ export class TitleScene implements Scene {
   private focus = 0;
   private buttons: HTMLButtonElement[] = [];
   private modal: HTMLElement | null = null;
+  /** あそびかたの操作タブを左右で切り替える（ほかのモーダルでは null） */
+  private switchTab: ((d: number) => void) | null = null;
 
   constructor(private app: App) {
     this.demo = demoMatch(Date.now() & 0xffff);
@@ -60,7 +109,7 @@ export class TitleScene implements Scene {
     const items: [string, () => void][] = [
       ['たいせん', () => this.start()],
       ['あそびかた', () => this.openHelp()],
-      ['MCP・クレジット', () => this.openCredits()],
+      ['クレジット', () => this.openCredits()],
     ];
     this.buttons = items.map(([label, fn], i) =>
       h('button', {
@@ -100,169 +149,170 @@ export class TitleScene implements Scene {
   private closeModal(): void {
     this.modal?.remove();
     this.modal = null;
+    this.switchTab = null;
     sfx('uiBack');
   }
 
-  private showModal(content: HTMLElement): void {
+  /** 見出し・右上の × ・下の「とじる」つきのモーダルを開く */
+  private showModal(title: string, ...body: (Node | string | null)[]): void {
     sfx('uiSelect');
-    this.modal = h('div', { class: 'modal-back', onclick: (e) => e.target === this.modal && this.closeModal() }, content);
+    const panel = h(
+      'div',
+      { class: 'modal', role: 'dialog', 'aria-label': title },
+      h('div', { class: 'modal-head' }, h('h2', {}, title), h('button', { class: 'modal-close', 'aria-label': 'とじる', onclick: () => this.closeModal() }, '×')),
+      ...body,
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => this.closeModal() }, 'とじる')),
+    );
+    this.modal = h('div', { class: 'modal-back', onclick: (e) => e.target === this.modal && this.closeModal() }, panel);
     this.app.ui.append(this.modal);
   }
 
   private openHelp(): void {
     const k1 = KEY_LAYOUTS.kb1.buttons;
     const k2 = KEY_LAYOUTS.kb2.buttons;
-    const key = (codes: string[]) => codes.map((c) => h('kbd', {}, c.replace(/^Key|^Digit/, '').replace('Numpad', 'Num').replace('Left', 'L').replace('Right', 'R').replace('Comma', ',').replace('Period', '.').replace('Slash', '/').replace('Semicolon', ';').replace('Quote', "'").replace('Space', 'Space')));
-    const row = (label: string, ...v: (Node | string)[]) => h('tr', {}, h('td', {}, label), h('td', {}, ...v));
+    // キーは代表の1つだけ見せる（F・G などの予備のキーは README に）
+    const keyboard = table(
+      ['操作', '1P', '2P'],
+      [
+        ['移動', keys('KeyW', 'KeyA', 'KeyS', 'KeyD'), keys('ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight')],
+        ['ジャンプ', keys(k1.jump[0]), keys(k2.jump[0])],
+        ['攻撃', keys(k1.attack[0]), keys(k2.attack[0])],
+        ['スマッシュ攻撃', keys(k1.smash[0]), keys(k2.smash[0])],
+        ['必殺ワザ', keys(k1.special[0]), keys(k2.special[0])],
+        ['ガード・回避', keys(k1.shield[0]), keys(k2.shield[0])],
+        ['つかみ', keys(k1.grab[0]), keys(k2.grab[0])],
+        ['ポーズ', keys(k1.start[0]), '—'],
+      ],
+    );
+    const pad = table(
+      ['操作', 'ボタン'],
+      [
+        ['移動', '左スティック・十字キー'],
+        ['ジャンプ', 'X・Y（スティックを上にはじいても）'],
+        ['攻撃', 'A'],
+        ['スマッシュ攻撃', '右スティック（スティックをはじいて A でも）'],
+        ['必殺ワザ', 'B'],
+        ['ガード・回避', 'R・ZL・ZR'],
+        ['つかみ', 'L'],
+        ['ポーズ', 'START'],
+      ],
+    );
+    const touch = table(
+      ['操作', 'やりかた'],
+      [
+        ['移動', '左下のスティック'],
+        ['ジャンプ', '「ジャンプ」（スティックを上にはじいても）'],
+        ['攻撃・必殺ワザ', '右下の「攻撃」「必殺」'],
+        ['ガード・つかみ', '右下の「ガード」「つかみ」'],
+        ['スマッシュ攻撃', 'スティックをはじくと同時に「攻撃」'],
+        ['ポーズ', '右上の「Ⅱ」'],
+      ],
+    );
+    const tabs: [string, HTMLElement][] = [
+      ['キーボード', h('div', {}, keyboard, h('p', { class: 'note' }, '2P は、キャラクター選択の画面で 2P のキー（「,」など）を押すと参加できます。'))],
+      ['ゲームパッド', h('div', {}, pad, h('p', { class: 'note' }, 'パッドをつないで、キャラクター選択の画面でボタンを押すと参加できます。'))],
+      ['スマホ・タブレット', h('div', {}, touch, h('p', { class: 'note' }, '横向きにすると遊びやすくなります。'))],
+    ];
+    const pane = h('div', { class: 'tab-pane' });
+    const tabButtons = tabs.map(([label], i) =>
+      h('button', { role: 'tab', onclick: () => { show(i); sfx('uiMove'); } }, label),
+    );
+    let cur = 0;
+    const show = (i: number) => {
+      cur = (i + tabs.length) % tabs.length;
+      tabButtons.forEach((b, j) => {
+        b.classList.toggle('on', j === cur);
+        b.setAttribute('aria-selected', String(j === cur));
+      });
+      pane.replaceChildren(tabs[cur][1]);
+    };
+    show(this.app.touchCapable ? 2 : 0);
     this.showModal(
-      h(
-        'div',
-        { class: 'modal' },
-        h('h2', {}, 'あそびかた'),
-        h('p', {}, '相手をステージの外へふっとばせば撃墜！ ダメージ％が高いほど遠くへ飛びます。ストックが先になくなった方の負け。ガード・回避・つかみ・崖つかまりもあります。'),
-        h(
-          'div',
-          { class: 'keys' },
-          h(
-            'div',
-            {},
-            h('h3', {}, 'キーボード1（1P）'),
-            h(
-              'table',
-              {},
-              row('移動', ...key(['KeyW', 'KeyA', 'KeyS', 'KeyD'])),
-              row('ジャンプ', ...key(k1.jump)),
-              row('攻撃', ...key(k1.attack), '（方向+で強攻撃）'),
-              row('スマッシュ', ...key(k1.smash), '+方向'),
-              row('必殺ワザ', ...key(k1.special), '+方向'),
-              row('ガード/回避', ...key(k1.shield)),
-              row('つかみ', ...key(k1.grab)),
-              row('ポーズ', ...key(['Enter', 'Escape'])),
-            ),
-          ),
-          h(
-            'div',
-            {},
-            h('h3', {}, 'キーボード2（2P）'),
-            h(
-              'table',
-              {},
-              row('移動', '矢印キー'),
-              row('ジャンプ', ...key(k2.jump)),
-              row('攻撃', ...key(k2.attack)),
-              row('スマッシュ', ...key(k2.smash)),
-              row('必殺ワザ', ...key(k2.special)),
-              row('ガード/回避', ...key(k2.shield)),
-              row('つかみ', ...key(k2.grab)),
-            ),
-          ),
-          h(
-            'div',
-            {},
-            h('h3', {}, 'ゲームパッド'),
-            h(
-              'table',
-              {},
-              row('移動', 'Lスティック / 十字'),
-              row('ジャンプ', 'X / Y（上はじきでも）'),
-              row('攻撃', 'A（はじき+Aでスマッシュ）'),
-              row('スマッシュ', 'Rスティック'),
-              row('必殺ワザ', 'B'),
-              row('ガード', 'R / ZL / ZR'),
-              row('つかみ', 'L'),
-            ),
-          ),
-        ),
-        h('h3', {}, 'コツ'),
-        h(
-          'ul',
-          {},
-          h('li', {}, 'スマッシュ攻撃はボタン長押しでタメ。ふっとばし力が上がります。'),
-          h('li', {}, '奥義ゲージが満タン（奥義 OK）のとき、方向を入れずに必殺ワザで「奥義」が発動します。'),
-          h('li', {}, 'ガード中に横で回避、下でその場回避、攻撃でつかみ。空中でガードすると空中回避。'),
-          h('li', {}, '崖から落ちたら空中ジャンプと上必殺ワザで復帰。崖につかまると少しの間無敵です。'),
-          h('li', {}, 'ふっとばされている間に方向入力すると飛ぶ向きを少しずらせます（ずらし）。着地の瞬間にガードで受け身。'),
-          h('li', {}, 'スマホ・タブレットは画面のバーチャルパッドで遊べます。'),
-        ),
-        h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => this.closeModal() }, 'とじる')),
+      'あそびかた',
+      section(
+        'ルール',
+        terms([
+          ['勝ち方', '相手を画面の外までふっとばすと撃墜。ダメージ（％）がたまるほど、遠くまでふっとびやすくなります。'],
+          ['ストック', '残りの命の数。撃墜されるたびに1つ減り、0になったら負け。最後まで残った人の勝ちです。'],
+          ['時間', '時間を決めた試合は、時間切れで終わり。「撃墜した数 − 撃墜された数」が多い人の勝ちです。'],
+        ]),
+      ),
+      section('操作', h('div', { class: 'tabs', role: 'tablist' }, ...tabButtons), pane),
+      section(
+        'テクニック',
+        terms([
+          ['スマッシュ攻撃', 'ボタンを長押しすると力をためて、もっと遠くへふっとばせます。'],
+          ['奥義', 'ゲージがたまって「奥義 OK」と出たら、方向を入れずに必殺ワザ。'],
+          ['回避', 'ガード中に左右で回避、下でその場回避。空中でガードすると空中回避。'],
+          ['つかみ・投げ', 'つかんだら方向で投げ、攻撃でつかんだまま攻撃。'],
+          ['崖からの復帰', '落ちたら空中ジャンプと「上＋必殺ワザ」で戻ります。崖につかまった直後は、少しのあいだ無敵。'],
+          ['ずらし・受け身', 'ふっとばされている間に方向を入れると、飛ぶ向きを少し変えられます。着地の瞬間にガードで受け身。'],
+        ]),
       ),
     );
+    this.switchTab = (d) => {
+      show(cur + d);
+      sfx('uiMove');
+    };
   }
 
   private openCredits(): void {
     const meta = ROSTER_META;
-    const mcpCount = FIGHTERS.filter((f) => f.partnerInMcp).length;
-    const link = (href: string, text: string) => h('a', { href, target: '_blank', rel: 'noopener' }, text);
+    const cnp = FIGHTERS.filter((f) => f.series === 'cnp');
+    const kitan = FIGHTERS.filter((f) => f.series === 'kitan');
     this.showModal(
-      h(
-        'div',
-        { class: 'modal' },
-        h('h2', {}, 'MCP 連携とクレジット'),
-        h(
-          'p',
-          {},
-          `CNP の ${FIGHTERS.filter((f) => f.series === 'cnp').length} キャラは、それぞれ CryptoNinja の忍者のパートナーです。Model Context Protocol サーバー `,
-          h('b', {}, `${meta.mcp.server} ${meta.mcp.version ?? ''}`),
-          ' に MCP クライアントとして接続し、',
-          h('code', {}, 'get_character / search_lore / get_worldview'),
-          ' でパートナーの忍者のクラン・忍術・得物を取得して、ワザと性能を組み立てています。',
-          `（うち ${mcpCount} キャラは、忍者のプロフィールにパートナーとして載っていることも MCP で照合）`,
+      'クレジット',
+      h('p', { class: 'lead' }, '「月下乱舞」は、CNP と月蝕綺譚のキャラクターが戦う、非公式・非営利のファンゲームです。CNP・CryptoNinja・月蝕綺譚の公式とは関係ありません。'),
+      section(
+        `CNP のキャラクター（${cnp.length}体）`,
+        h('p', {}, 'CNP のキャラは、CryptoNinja の忍者の相棒（パートナー）です。ワザは、相棒の忍者の忍術と武器をもとに作りました。忍者の設定は、プログラムから CryptoNinja の設定を読める「NINJAMCP」から読み込んでいます。'),
+        table(
+          ['キャラ', '相棒の忍者', 'ワザのもと'],
+          cnp.map((f) => [
+            h('span', {}, f.name, h('small', {}, f.species)),
+            f.partner ? h('span', {}, f.partner.name, h('small', {}, f.partner.clan)) : '—',
+            [f.partner?.ninjutsu, f.partner?.weapon].filter(Boolean).join('・') || '—',
+          ]),
         ),
-        h('p', {}, `同期日時: ${new Date(meta.mcp.syncedAt).toLocaleString('ja-JP')}（npm run sync:roster で再取得）`),
+      ),
+      section(
+        `月蝕綺譚のキャラクター（${kitan.length}体）`,
+        h('p', {}, 'CryptoNinja 外伝「月蝕綺譚 -Luna Occulta-」（Studio VIBE）の御霊たちです。3D モデルは、公式が二次創作のために配っているものを使っています。'),
+        h(
+          'ul',
+          { class: 'chips' },
+          // 里・五行の無い御霊（道しるべの栞）は名前だけ
+          ...kitan.map((f) => h('li', {}, f.name, f.clan || f.element ? h('small', {}, [f.clan, f.element].filter(Boolean).join('・')) : null)),
+        ),
+      ),
+      section(
+        '権利について',
         h(
           'ul',
           {},
-          ...FIGHTERS.filter((f) => f.series === 'cnp').map((f) =>
-            h('li', {}, h('b', {}, f.name), `（${f.species}）← ${f.partner?.name ?? '?'}・${f.partner?.clan ?? ''}：${f.partner?.ninjutsu ?? '-'} / ${f.partner?.weapon ?? '-'}`, f.partnerInMcp ? ' [MCP]' : ''),
-          ),
+          h('li', {}, 'キャラクターの権利は、それぞれの権利者にあります（CNP: © CryptoNinja Partners ／ CryptoNinja: © Ninja DAO）。'),
+          h('li', {}, 'CNP の 3D モデルは、素材屋CNP のイラストを AI に見せて、このゲームのために作ったものです（イラストそのものは使っていません）。デザインの権利は、元のイラストの作者と CNP にあります。'),
+          h('li', {}, '月蝕綺譚の 3D モデルは公式の配布モデルです。モデルだけを取り出して配ることはできません。', h('span', { class: 'nowrap' }, '#月蝕綺譚')),
         ),
-        h('h3', {}, '月蝕綺譚 -Luna Occulta-'),
         h(
-          'p',
-          {},
-          'CryptoNinja 外伝「月蝕綺譚」の御霊も参戦しています（',
-          FIGHTERS.filter((f) => f.series === 'kitan')
-            .map((f) => {
-              // 里・五行の無い御霊（道しるべの栞）は名前だけ
-              const tags = [f.clan, f.element].filter(Boolean).join('・');
-              return tags ? `${f.name}（${tags}）` : f.name;
-            })
-            .join('、'),
-          '）。3D モデルは月蝕綺譚の二次創作「3Dの間」で配布されている公式モデル（ゲーム版 GLB）を、',
-          link('https://vibe.co.jp/luna-occulta/fanworks', '二次創作ガイドライン'),
-          'に沿って組み込み、このゲームの骨格に付け直して動かしています。里・五行・忍術の名前は公式の正典シートの公開情報から、説明文と性能は本作オリジナルです。',
+          'div',
+          { class: 'links' },
+          h('span', {}, '二次創作のルール'),
+          link('https://www.cryptoninja-partners.xyz/fanart-guideline.html', 'CNP'),
+          link('https://www.ninja-dao.com/guidelines', 'CryptoNinja'),
+          link('https://sozaiya.cryptoninja-partners.xyz/guidelines', '素材屋CNP（AI）'),
+          link('https://vibe.co.jp/luna-occulta/fanworks', '月蝕綺譚'),
         ),
-        h('h3', {}, 'データ出典'),
-        h('p', {}, link(meta.credit.url, meta.credit.title), `（${meta.credit.author}）— NINJAMCP 経由。MCP に載っていないパートナー関係（ルナ・マカミ・トワ・セツナ）は CNP 公式の公開情報より。`),
-        h('h3', {}, 'ライセンス・ガイドライン'),
+      ),
+      section(
+        '使わせてもらったもの',
         h(
           'ul',
           {},
-          h(
-            'li',
-            {},
-            '本作は非公式・非営利のファンメイド作品で、CNP・CryptoNinja の公式とは関係ありません（販売・収益化はしていません）。キャラクターの権利は各権利者にあります（CNP: © CryptoNinja Partners ／ CryptoNinja: © Ninja DAO）。二次創作のルールは ',
-            link('https://www.cryptoninja-partners.xyz/fanart-guideline.html', 'CNP 二次創作ガイドライン'),
-            '・',
-            link('https://www.ninja-dao.com/guidelines', 'CryptoNinja 利用ガイドライン'),
-            ' をご確認ください。',
-          ),
-          h(
-            'li',
-            {},
-            'CNP 9体の 3D モデルは本作で手続き生成したもので、公式イラストは使用・同梱していません。見た目は素材屋CNP のイラスト 9 点（1体1点）を AI に読み込ませて寄せました（',
-            link('https://sozaiya.cryptoninja-partners.xyz/guidelines', '素材屋CNP の AI 生成ガイドライン'),
-            'の上限「合計10点まで」の範囲内）。キャラクターのデザインの権利は元のイラストの制作者と CNP にあります。',
-          ),
-          h(
-            'li',
-            {},
-            '月蝕綺譚 -Luna Occulta-（Studio VIBE）の御霊の 3D モデルは公式の配布モデルです。本作は月蝕綺譚の公式とも関係のない非公式ファンメイドで、モデル単体の再配布はできません。#月蝕綺譚',
-          ),
-          h('li', {}, 'NINJAMCP（MIT License）: github.com/omikirin/mcp ／ three.js（MIT License）'),
-          h('li', {}, 'ゲームのプログラム・ステージ・演出・効果音・BGM は本作オリジナル（手続き生成）です。'),
+          h('li', {}, 'キャラクターの設定：', link(meta.credit.url, meta.credit.title), `（${meta.credit.author}）、CNP 公式サイト`),
+          h('li', {}, 'NINJAMCP（MIT License）・three.js（MIT License）'),
+          h('li', {}, 'プログラム・ステージ・効果音・BGM は、このゲームのために作ったものです。'),
         ),
-        h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => this.closeModal() }, 'とじる')),
       ),
     );
   }
@@ -272,6 +322,12 @@ export class TitleScene implements Scene {
     if (this.app.tick > 20) pumpThumbs();
     const m = this.app.menuAny();
     if (this.modal) {
+      // キーやパッドでも読めるように: 左右でタブ、上下でスクロール
+      if (m.left || m.right) this.switchTab?.(m.right ? 1 : -1);
+      if (m.up || m.down) {
+        const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        this.modal.querySelector('.modal')?.scrollBy({ top: m.down ? 120 : -120, behavior: smooth ? 'smooth' : 'auto' });
+      }
       if (m.back || m.confirm || m.start) this.closeModal();
       return;
     }

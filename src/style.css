@@ -206,7 +206,7 @@ button {
 .modal-back {
   position: absolute;
   inset: 0;
-  background: rgba(5, 4, 12, 0.72);
+  background: rgba(5, 4, 12, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -214,75 +214,269 @@ button {
   z-index: 20;
 }
 
+/* 後ろのタイトル画面が透けて読みにくくならないよう、地は不透明 */
 .modal {
-  background: var(--panel-2);
+  --sheet: #1b1630;
+  --pad-top: 18px;
+  background: var(--sheet);
   border: 1px solid var(--line);
   border-radius: 20px;
-  padding: 22px 24px;
-  width: min(760px, 100%);
+  padding: var(--pad-top) 24px 22px;
+  width: min(720px, 100%);
   max-height: 100%;
   overflow: auto;
+  overscroll-behavior: contain;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.modal-head {
+  position: sticky;
+  top: calc(-1 * var(--pad-top));
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: calc(-1 * var(--pad-top));
+  padding: var(--pad-top) 0 8px;
+  background: var(--sheet);
 }
 
 .modal h2 {
   font-family: var(--display);
   font-weight: 400;
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 24px;
   color: var(--gold);
 }
 
+.modal-close {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.modal-close:hover,
+.modal-close:focus-visible {
+  border-color: var(--gold);
+}
+
+.modal .lead {
+  margin: 12px 0 0;
+  color: var(--text);
+}
+
+.sheet {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
 .modal h3 {
-  margin: 16px 0 6px;
-  font-size: 15px;
-  color: #fff;
+  margin: 0 0 10px;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--gold-2);
 }
 
 .modal p,
-.modal li {
+.modal li,
+.modal dd {
   color: #ddd7f2;
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.75;
+}
+
+.modal p {
+  margin: 0 0 10px;
+  max-width: 44em;
+}
+
+.modal ul {
+  margin: 0;
+  padding-left: 1.2em;
 }
 
 .modal a {
   color: var(--gold-2);
 }
 
-.keys {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 12px;
+.modal .row {
+  margin-top: 20px;
 }
 
-.keys table {
+/* 用語と説明（ルール・テクニック） */
+.terms {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 18px;
+  margin: 0;
+}
+
+.terms dt {
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+.terms dd {
+  margin: 0;
+}
+
+/* 表（操作・キャラ一覧） */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.sheet-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
 }
 
-.keys td {
-  padding: 4px 6px;
+.sheet-table th,
+.sheet-table td {
+  text-align: left;
+  padding: 7px 10px;
   border-bottom: 1px solid var(--line);
+  vertical-align: middle;
 }
 
-.keys td:first-child {
+.sheet-table thead th {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   color: var(--muted);
+  border-bottom-color: rgba(255, 255, 255, 0.28);
+}
+
+.sheet-table tbody th {
+  font-weight: 700;
+  color: var(--text);
   white-space: nowrap;
+}
+
+.sheet-table td {
+  color: #ddd7f2;
+}
+
+.sheet-table small,
+.chips small {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.keycaps {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 kbd {
   display: inline-block;
-  min-width: 22px;
-  padding: 1px 6px;
+  min-width: 26px;
+  padding: 1px 7px;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-bottom-width: 3px;
   background: rgba(255, 255, 255, 0.08);
   font-family: var(--font);
-  font-size: 12px;
+  font-size: 13px;
   text-align: center;
+}
+
+/* 操作のタブ（キーボード／パッド／スマホ） */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tabs button {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tabs button.on {
+  background: #fff;
+  color: #1a1430;
+}
+
+.tabs button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.modal .note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* 月蝕綺譚の御霊の名札（宵闇に金のトンマナ） */
+.modal .chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.modal .chips li {
+  border: 1px solid rgba(217, 169, 76, 0.45);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-family: var(--mincho);
+  font-weight: 700;
+  color: var(--geppaku);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (max-width: 560px) {
+  .modal {
+    --pad-top: 14px;
+    padding: var(--pad-top) 16px 18px;
+  }
+  .terms {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .terms dd {
+    margin-bottom: 8px;
+  }
+  .sheet-table th,
+  .sheet-table td {
+    padding: 6px;
+  }
+  .sheet-table tbody th {
+    white-space: normal;
+  }
 }
 
 /* ───────── キャラ選択 ───────── */
@@ -577,8 +771,7 @@ kbd {
   line-height: 1.4;
 }
 
-.slot .partner .mcp,
-.modal .mcp {
+.slot .partner .mcp {
   display: inline-block;
   margin-left: 6px;
   padding: 0 5px;
@@ -597,14 +790,6 @@ kbd {
   opacity: 0.7;
 }
 
-.topbar .sub-title {
-  font-size: 12px;
-  color: #bfb6e0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
 
 .slot .tags {
   display: flex;

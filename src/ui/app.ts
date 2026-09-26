@@ -119,7 +119,7 @@ export class App {
   scene: Scene | null = null;
   tick = 0;
   slots: Slot[];
-  rules: MatchRules = { stocks: 3, time: 0, stageId: 'iga' };
+  rules: MatchRules = { stocks: 3, time: 180, stageId: 'iga' };
   lastStage = 'iga';
   readonly touchCapable: boolean;
 
@@ -140,16 +140,20 @@ export class App {
 
   /** 旧タイトル（CNP乱舞）時代のキー。変えると保存済みの設定が消えるのでそのまま */
   private static KEY = 'cnp-ranbu:v1';
+  private static SAVE_VERSION = 2;
 
   /** 前回のルールと選択を復元（ブラウザのストレージが使えなければ何もしない） */
   private load(): void {
     try {
       const raw = localStorage.getItem(App.KEY);
       if (!raw) return;
-      const d = JSON.parse(raw) as { rules?: Partial<MatchRules>; slots?: { kind: SlotKind; fighterId: string | null; cpuLevel: number }[]; stage?: string };
+      const d = JSON.parse(raw) as { v?: number; rules?: Partial<MatchRules>; slots?: { kind: SlotKind; fighterId: string | null; cpuLevel: number }[]; stage?: string };
       if (d.rules) {
         this.rules.stocks = Math.max(1, Math.min(5, Number(d.rules.stocks) || 3));
-        this.rules.time = [0, 120, 180, 300, 420].includes(Number(d.rules.time)) ? Number(d.rules.time) : 0;
+        const t = Number(d.rules.time);
+        // 保存の v2 で時間の初期値を「なし」から 3 分に変えた。それより前の保存の「なし」は初期値のままだったとみなす
+        const oldDefault = (d.v ?? 1) < App.SAVE_VERSION && t === 0;
+        if ([0, 120, 180, 300, 420].includes(t) && !oldDefault) this.rules.time = t;
       }
       if (typeof d.stage === 'string') this.lastStage = d.stage;
       d.slots?.slice(0, 4).forEach((s, i) => {
@@ -168,6 +172,7 @@ export class App {
       localStorage.setItem(
         App.KEY,
         JSON.stringify({
+          v: App.SAVE_VERSION,
           rules: this.rules,
           stage: this.lastStage,
           slots: this.slots.map((s) => ({ kind: s.kind, fighterId: s.fighterId, cpuLevel: s.cpuLevel })),
