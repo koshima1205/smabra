@@ -77,11 +77,8 @@ export class TitleScene implements Scene {
       h('h1', { class: 'logo' }, '月下乱舞'),
       // 公式作品と誤認されないよう、ロゴのすぐ下で非公式と示す（CNP 二次創作ガイドライン「誤認防止」）
       h('div', { class: 'logo-sub' }, '非公式ファンゲーム'),
-      h('p', { class: 'tagline' }, `CNP と月蝕綺譚の ${FIGHTERS.length}体が 3D で入り乱れて戦う — CNP のパートナー忍者の設定は MCP サーバー「${ROSTER_META.mcp.server}」から取得`),
       h('div', { class: 'press-start blink' }, 'PRESS START'),
       h('div', { class: 'menu' }, ...this.buttons),
-      h('p', { class: 'hint', style: 'margin-top:14px' }, 'クリック・タップ、または W/S・↑↓ で選んで J / Space / A で決定'),
-      h('div', { class: 'footer-note' }, '非公式・非営利のファンゲームです。CNP・CryptoNinja・月蝕綺譚の公式とは関係ありません。キャラクターの権利は各権利者に帰属します。'),
     );
     this.app.ui.append(root);
     this.updateFocus();
