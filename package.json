@@ -1,8 +1,8 @@
 {
-  "name": "cnp-ranbu",
+  "name": "gekka-ranbu",
   "private": true,
   "version": "0.1.0",
-  "description": "CNP乱舞 — CryptoNinja Partners と月蝕綺譚のキャラが戦う非公式ファンメイドの 3D プラットフォーム対戦アクション（CNP のパートナー情報は NINJAMCP から MCP 経由で取得）",
+  "description": "月下乱舞 — CNP（CryptoNinja Partners）と月蝕綺譚のキャラが戦う非公式ファンメイドの 3D プラットフォーム対戦アクション（CNP のパートナー情報は NINJAMCP から MCP 経由で取得）",
   "type": "module",
   "scripts": {
     "predev": "node scripts/fetch-kitan.mjs",

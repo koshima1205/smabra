@@ -1,9 +1,9 @@
-# 引き継ぎメモ（CNP乱舞）
+# 引き継ぎメモ（月下乱舞）
 
 新しいセッションで作業を続けるためのメモです。最初にこのファイルと `README.md` を読んでから始めてください。返答・報告は日本語で。
 
-- リポジトリ: `koshima1205/smabra`（**公開リポジトリ**）
-- 作業ブランチ: `claude/tsukusettan-cnp-mcp-smash-yapw36`（このブランチで作業し、同じブランチに push）
+- リポジトリ: `koshima1205/smabra`（**公開リポジトリ**。「スマブラ」を連想させるので、ユーザーが名前を変える予定。案は `gekka-ranbu`。変わったらここを直す）
+- 作業ブランチ: セッションで指定されたブランチで作業して push（既定のブランチは `claude/tsukusettan-cnp-mcp-smash-yapw36`。2026-09-26 のセッションは `claude/brave-lamport-5dko2v` で作業）
 - 遊べるページ（Artifact、非公開）: https://claude.ai/artifact/4NpJkm59K24nQvpw4CEzCu
   - 更新するときは、先に `read` してから `url` を指定して publish（アイコンは変えない）
   - ページ本体は `npm run build:single` の `dist-single/index.html` を、下の「Artifact 用の断片の作り方」で変換したもの
@@ -27,25 +27,21 @@ CNP（CryptoNinja Partners）9体と、CryptoNinja 外伝「月蝕綺譚 -Luna O
 
 - **素材屋CNP**（https://sozaiya.cryptoninja-partners.xyz/）: AI に読み込ませるのは**合計10点まで**。すでに 9点使用済み（残り1点）。イラストをリポジトリ・ゲームに入れない。トレースしない
 - **月蝕綺譚の二次創作ガイドライン**（https://vibe.co.jp/luna-occulta/fanworks）: ゲーム制作 OK・公式を名乗らない・**モデルそのままの再配布 NG**（だから GLB はリポジトリに入れない）・正典シートの転載 NG
-- **CryptoNinja / CNP**: 非公式ファンメイドであることをクレジット・README に明記。公式を名乗らない
+- **CNP / CryptoNinja**（確認結果は [GUIDELINES.md](GUIDELINES.md)。ユーザーの回答では個人の趣味の非営利作品）: タイトルに「CNP」を入れない（公式の「CNP○○」と紛らわしいので、2026-09-26 に「CNP乱舞」→「月下乱舞」に改名した）。非公式・非営利のファンメイドであることをタイトル画面（ロゴ下の「非公式ファンゲーム」）・クレジット・README に明記。「コラボ」「パートナーシップ」など公式と誤認される言葉は使わない。販売・収益化（広告・投げ銭を含む）はしない（非ホルダーの商用利用は審査・契約が必要）。CNP のモデルの見た目は素材屋CNP のイラスト由来なので「本作オリジナル」と書かない。公式サイトのメインビジュアルは AI にも素材にも使わない
 - **任天堂（スマブラ）**: 仕組み（％ダメージ・ストック・崖つかまり）は使っているが、固有の名前・決め台詞・見た目は避ける。「READY TO FIGHT」→「いざ、勝負」、「GAME SET」→「勝負あり」、「大乱闘」「スマブラ風」は削除済み
 - コミットメッセージや成果物にモデル名（AI のモデル名）は書かない
 
 ## 未解決（次にやること）
 
-1. **CNP の利用ガイドライン本文の確認**（最優先）
-   - https://www.ninja-dao.com/guidelines と CNP 公式サイト（https://www.cryptoninja-partners.xyz/）の利用規約を読み、タイトルに「CNP」を使うこと・キャラの 3D 化・公開方法が問題ないか照らし合わせる
-   - 前のセッションでは、この2つのホストがネットワーク設定で拒否されて読めなかった（許可ドメインに追加してもらった上で新しいセッションを開始）
-   - 分かっていること: 月蝕綺譚の掟の要約では、原作 CryptoNinja は「CC0 ではないが、ガイドラインの範囲なら許可なしで制作・頒布・販売してよい（年商2,000万円以内が目安）」
-2. **公開リポジトリの履歴に月蝕綺譚のモデルが残っている**
-   - コミット `fdc4ea7`（Add four Luna Occulta spirits…）に `src/assets/kitan/{oto,xiaolan,orochi,emma}.glb` が含まれ、今も取得できる。「モデルそのままの再配布 NG」に当たるおそれ
-   - 消すには履歴の書き換えと強制 push が必要。**ユーザーの了承がまだ無い**ので、やる前に必ず確認する（一時的にリポジトリを非公開にする選択肢もある）
-3. リポジトリ名 `smabra` とブランチ名が「スマブラ」を連想させるので、公開前に変えるか検討（ユーザー判断）
-4. Artifact は非公開のまま。広く公開するのは 1 の確認後がおすすめ
+2026-09-26 に済んだこと: CNP の利用ガイドラインの確認（[GUIDELINES.md](GUIDELINES.md)）、「月下乱舞」への改名、月蝕綺譚の公式モデル（4体分の GLB）を git の履歴から消して全ブランチに強制 push（ユーザーの了承済み。コミットの ID はそれ以前と変わっている）。
+
+1. **GitHub 上の古いコミット**: 履歴からは消えたが、GitHub は GLB を含む古いコミット（`fdc4ea7`）をハッシュを指定すれば今も表示する。完全に消すには、ユーザーが GitHub サポートに削除を依頼するか、新しいリポジトリに移して古いリポジトリを削除する（ユーザー判断）
+2. **リポジトリ名の変更**: ユーザーが GitHub の Settings で行う（案 `gekka-ranbu`）。既定のブランチ名 `claude/tsukusettan-cnp-mcp-smash-yapw36` にも「smash」が入っている（変えるなら Settings → Branches）
+3. Artifact は非公開のまま（2026-09-26 に月下乱舞の版へ更新）。広く公開するかはユーザー判断
 
 ## 環境メモ
 
-- 許可ドメイン（前のセッション時点）: `sozaiya.cryptoninja-partners.xyz`、`static.wixstatic.com`（素材屋CNP のイラスト置き場）、`vibe.co.jp`、`kura.vibe.co.jp`、`cn-lore-mcp.nubonba.workers.dev`
+- 許可ドメイン（2026-09-26 時点）: `www.ninja-dao.com`、`www.cryptoninja-partners.xyz`、`sozaiya.cryptoninja-partners.xyz`（`www.` 付きは拒否）、`static.wixstatic.com`（素材屋CNP のイラスト置き場）、`vibe.co.jp`、`kura.vibe.co.jp`、`cn-lore-mcp.nubonba.workers.dev`
   - `kitan-lore-mcp.nubonba.workers.dev` は直接は拒否されていたが、**claude.ai のコネクタ（kitan-lore）として接続済み**なので MCP ツールで使える
 - NINJAMCP（ninjamcp）はセッションによって接続に失敗することがある
 - Chromium は入っていて WebGL も動く（`playwright install` はしない）。スクショ確認は `npm run dev` → `/dev/models.html`（`?ids=` `?pose=` `?t=10` `?yaw=` `?q=low` など）
