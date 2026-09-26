@@ -552,7 +552,7 @@ export class Match {
     const ranking = this.ranking();
     this.winner = ranking[0] ?? null;
     this.sfx('gameSet', null);
-    this.banner = { text: 'GAME SET', t: 150, color: '#fff3c4' };
+    this.banner = { text: '勝負あり', t: 150, color: '#fff3c4' };
   }
 
   /** 順位（1位から） */

@@ -2,7 +2,7 @@ import * as K from './constants';
 import type { HitboxBase } from './types';
 
 /**
- * 吹っ飛び値（スマブラ系の式）
+ * 吹っ飛び値（プラットフォーム対戦でよく使われる形の式）
  * p: 攻撃後の蓄積％, d: ダメージ, w: 重さ(100 が標準), bkb: ベース, kbg: 成長率
  */
 export function knockback(p: number, d: number, w: number, bkb: number, kbg: number): number {

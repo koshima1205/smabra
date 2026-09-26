@@ -130,9 +130,13 @@ export class SelectScene implements Scene {
       const card = h(
         'div',
         {
-          class: 'card',
+          class: spec.series === 'kitan' ? 'card kitan' : 'card',
           title: `${spec.name}（${spec.nameEn}）`,
-          style: `background: radial-gradient(circle at 50% 38%, ${spec.look.color}aa, #221a3d 72%)`,
+          // 月蝕綺譚の御霊は公式トンマナ「宵闇に金」（宵闇藍の地・金泥の細い線）で
+          style:
+            spec.series === 'kitan'
+              ? 'background: radial-gradient(circle at 50% 30%, #24203e, #131320 74%)'
+              : `background: radial-gradient(circle at 50% 38%, ${spec.look.color}aa, #221a3d 72%)`,
           onclick: () => this.pick(idx),
           onmouseenter: () => this.hover(idx),
         },
@@ -257,10 +261,12 @@ export class SelectScene implements Scene {
     );
     const head = h('div', { class: 'head' }, h('span', { class: 'port', style: `background:${color}` }, s.kind === 'cpu' ? `CP${i + 1}` : `${i + 1}P`), kindBtns);
     if (s.kind === 'off') {
+      el.classList.remove('kitan');
       el.replaceChildren(h('div', { class: 'info' }, head, h('div', { class: 'empty' }, 'クリックかボタンで参加')));
       return;
     }
     const spec = this.cursorSpec(i);
+    el.classList.toggle('kitan', spec?.series === 'kitan');
     const por = h('div', { class: 'por' });
     if (spec) por.append(portraitEl(spec, 160));
     else por.append(h('div', { class: 'card random', style: 'position:absolute;inset:0;border:none' }, '？'));
@@ -352,7 +358,7 @@ export class SelectScene implements Scene {
   private refreshReady(): void {
     const ready = this.isReady();
     if (ready && !this.readyEl) {
-      this.readyEl = h('div', { class: 'ready', onclick: () => this.proceed() }, 'READY TO FIGHT', h('small', {}, 'クリック / Enter / START でステージ選択へ'));
+      this.readyEl = h('div', { class: 'ready', onclick: () => this.proceed() }, 'いざ、勝負', h('small', {}, 'クリック / Enter / START でステージ選択へ'));
       this.app.ui.firstElementChild?.append(this.readyEl);
     } else if (!ready && this.readyEl) {
       this.readyEl.remove();

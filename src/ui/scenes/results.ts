@@ -35,7 +35,7 @@ export class ResultsScene implements Scene {
         { class: 'screen results' },
         h(
           'div',
-          { class: 'winner' },
+          { class: win.spec.series === 'kitan' ? 'winner kitan' : 'winner' },
           h('div', { class: 'big', style: `border-color:${color}` }, portraitEl(win.spec, 280)),
           h(
             'div',
@@ -44,6 +44,8 @@ export class ResultsScene implements Scene {
             h('div', { class: 'wn' }, win.spec.name),
             h('div', { class: 'we' }, `${this.battle.view.labels[wi]} ・ ${win.spec.nameEn} ・ ${win.spec.species}`),
             h('div', { class: 'we', style: 'margin-top:6px;font-weight:700' }, win.spec.blurb),
+            // 御霊の勝利の一言（公式の口調に合わせて本作で書いたもの）
+            win.spec.quotes?.length ? h('div', { class: 'quote' }, `「${win.spec.quotes[m.frame % win.spec.quotes.length]}」`) : '',
           ),
         ),
         h(

@@ -76,7 +76,7 @@ export class TitleScene implements Scene {
       { class: 'screen title' },
       h('h1', { class: 'logo' }, 'CNP乱舞'),
       h('div', { class: 'logo-sub' }, 'CRYPTONINJA PARTNERS RANBU'),
-      h('p', { class: 'tagline' }, `CNP ${FIGHTERS.length}体が 3D で大乱闘 — パートナー忍者の設定は MCP サーバー「${ROSTER_META.mcp.server}」から取得`),
+      h('p', { class: 'tagline' }, `CNP と月蝕綺譚の ${FIGHTERS.length}体が 3D で入り乱れて戦う — CNP のパートナー忍者の設定は MCP サーバー「${ROSTER_META.mcp.server}」から取得`),
       h('div', { class: 'press-start blink' }, 'PRESS START'),
       h('div', { class: 'menu' }, ...this.buttons),
       h('p', { class: 'hint', style: 'margin-top:14px' }, 'クリック・タップ、または W/S・↑↓ で選んで J / Space / A で決定'),

@@ -1,8 +1,4 @@
 import * as THREE from 'three';
-import emmaUrl from '../../assets/kitan/emma.glb?url';
-import orochiUrl from '../../assets/kitan/orochi.glb?url';
-import otoUrl from '../../assets/kitan/oto.glb?url';
-import xiaolanUrl from '../../assets/kitan/xiaolan.glb?url';
 import { finishModel } from '../model';
 import { createRig, type Rig, type RigSpec } from '../rig';
 import { outlineMat, toonMat } from '../toon';
@@ -18,16 +14,54 @@ import { armOrder, clearHead, INK } from './parts';
  * モデルの出典と利用条件は src/assets/kitan/README.md。
  */
 
-const URLS: Record<KitanId, string> = { k_oto: otoUrl, k_xiaolan: xiaolanUrl, k_orochi: orochiUrl, k_emma: emmaUrl };
+/**
+ * モデルのファイル（npm run sync:kitan で素材蔵から取得。リポジトリには入れない）。
+ * 無いキャラは仮の形で表示される
+ */
+const FILES = import.meta.glob('../../assets/kitan/models/*.glb', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
+const urlOf = (id: KitanId): string | undefined => FILES[`../../assets/kitan/models/${id.slice(2)}.glb`];
 
 /** 月蝕綺譚のモデル一覧（選択画面の並び順） */
-export const KITAN_IDS: KitanId[] = ['k_oto', 'k_xiaolan', 'k_orochi', 'k_emma'];
+export const KITAN_IDS: KitanId[] = [
+  'k_oto',
+  'k_xiaolan',
+  'k_orochi',
+  'k_emma',
+  'k_nemu',
+  'k_anne',
+  'k_karma',
+  'k_shiba',
+  'k_atoza',
+  'k_aun',
+  'k_tobari',
+  'k_sasura',
+  'k_sekishusai',
+  'k_shiori',
+];
 
 /** 身長（当たり判定と同じ値。src/game/roster.ts の height と合わせる） */
-export const KITAN_HEIGHT: Record<KitanId, number> = { k_oto: 96, k_xiaolan: 100, k_orochi: 100, k_emma: 100 };
+export const KITAN_HEIGHT: Record<KitanId, number> = {
+  k_oto: 96,
+  k_xiaolan: 100,
+  k_orochi: 100,
+  k_emma: 100,
+  k_nemu: 96,
+  k_anne: 98,
+  k_karma: 94,
+  k_shiba: 96,
+  k_atoza: 104,
+  k_aun: 100,
+  k_tobari: 100,
+  k_sasura: 100,
+  k_sekishusai: 100,
+  k_shiori: 96,
+};
 
-/** 下半身の作り。split = 左右の脚に分ける、none = 分けない（オロチはとぐろの蛇の体） */
-const LOWER: Record<KitanId, 'split' | 'none'> = { k_oto: 'split', k_xiaolan: 'split', k_orochi: 'none', k_emma: 'split' };
+/** 下半身の作り。split = 左右の脚に分ける、none = 分けない（とぐろの蛇の体・長い裾で脚が見えない体） */
+const LOWER: Partial<Record<KitanId, 'none'>> = { k_orochi: 'none', k_shiori: 'none' };
+
+/** 体をカメラ側へ振り向かせる角度（CNP の顔が LOOK だけカメラを向くのに合わせる） */
+const TURN = 0.4;
 
 /** 色違い（同じキャラが複数いるとき）に掛ける色 */
 const TINTS = ['#ffffff', '#ffc4c4', '#c4dcff', '#fff0b0'];
@@ -55,7 +89,7 @@ const sources = new Map<KitanId, Source>();
 const fitted = new Map<KitanId, Fitted>();
 let loading: Promise<void> | null = null;
 
-export const isKitanId = (id: string): id is KitanId => id in URLS;
+export const isKitanId = (id: string): id is KitanId => (KITAN_IDS as string[]).includes(id);
 
 /** 公式モデルを読み込む（起動時に一度。失敗したキャラは仮の形で表示される） */
 export function preloadKitan(): Promise<void> {
@@ -63,7 +97,9 @@ export function preloadKitan(): Promise<void> {
     loading = Promise.all(
       KITAN_IDS.map(async (id) => {
         try {
-          sources.set(id, await parseGlb(await bytesOf(URLS[id])));
+          const url = urlOf(id);
+          if (!url) throw new Error('モデルのファイルがありません（npm run sync:kitan で取得）');
+          sources.set(id, await parseGlb(await bytesOf(url)));
         } catch (e) {
           console.warn(`月蝕綺譚のモデルを読み込めませんでした: ${id}`, e);
         }
@@ -253,7 +289,7 @@ function fit(id: KitanId, src: Source): Fitted {
   }
   const legZ = ln ? lz / ln : 0;
   const legX = ln ? lx : 1;
-  const lower = LOWER[id];
+  const lower = LOWER[id] ?? 'split';
   const H = KITAN_HEIGHT[id];
   const s = H / (y1 - y0);
   const hipY = (legTop - y0) * s;
@@ -407,6 +443,11 @@ export function buildKitan(id: KitanId, opts: CharacterOpts = {}): CharacterMode
   }
   return finishModel({
     rig,
-    animate: (_p, r) => clearHead(r, 0.7),
+    animate: (_p, r) => {
+      // ゲームのカメラは横寄りから見るので、髪の多い御霊でも顔が見えるよう体ごと少しカメラ側（+z）へ向ける
+      r.body.rotation.y = -TURN;
+      r.head.rotation.y = -0.15;
+      clearHead(r, 0.7);
+    },
   });
 }

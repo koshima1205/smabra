@@ -1,0 +1,104 @@
+{
+  "source": "https://kura.vibe.co.jp/index.json",
+  "license": "https://vibe.co.jp/luna-occulta/fanworks",
+  "models": [
+    {
+      "id": "k_oto",
+      "file": "oto.glb",
+      "url": "https://kura.vibe.co.jp/model3d/oto_67a89820.glb",
+      "bytes": 393344,
+      "sha256": "67a89820c82b4c628df93c58a66dfd84a0816b66872dcd726621bdc003bd21d5"
+    },
+    {
+      "id": "k_xiaolan",
+      "file": "xiaolan.glb",
+      "url": "https://kura.vibe.co.jp/model3d/xiaolan_0ace70d2.glb",
+      "bytes": 375848,
+      "sha256": "0ace70d23074d6a6fb83ef6d8685e7bf011a0e00d814979b100373569bf88859"
+    },
+    {
+      "id": "k_orochi",
+      "file": "orochi.glb",
+      "url": "https://kura.vibe.co.jp/model3d/orochi_d95b2dd4.glb",
+      "bytes": 345064,
+      "sha256": "d95b2dd4e35104a308b69373f53d2ef17c49cef666df5bfd9575920533cf1837"
+    },
+    {
+      "id": "k_emma",
+      "file": "emma.glb",
+      "url": "https://kura.vibe.co.jp/model3d/emma_cb4b67e5.glb",
+      "bytes": 376804,
+      "sha256": "cb4b67e55a556a096fe1c56486f8e9915c0f4039ea63c429ac17c150f89de997"
+    },
+    {
+      "id": "k_nemu",
+      "file": "nemu.glb",
+      "url": "https://kura.vibe.co.jp/model3d/nemu_1d0f9d24.glb",
+      "bytes": 466352,
+      "sha256": "1d0f9d24878d824beb8a73c22204b9a1ee12c7046777d054b13f76208bac7621"
+    },
+    {
+      "id": "k_anne",
+      "file": "anne.glb",
+      "url": "https://kura.vibe.co.jp/model3d/anne_b4ffa1e6.glb",
+      "bytes": 361336,
+      "sha256": "b4ffa1e6cbe2682d9bcb79bdb938f101f604c80cc0a86a864f65b6e909179b77"
+    },
+    {
+      "id": "k_karma",
+      "file": "karma.glb",
+      "url": "https://kura.vibe.co.jp/model3d/karma_88df613d.glb",
+      "bytes": 378872,
+      "sha256": "88df613db702d1552a8ba1b649a27805781af2b6c2dddd48abcbe62d2dccdffc"
+    },
+    {
+      "id": "k_shiba",
+      "file": "shiba.glb",
+      "url": "https://kura.vibe.co.jp/model3d/shiba_6c21fb10.glb",
+      "bytes": 395672,
+      "sha256": "6c21fb10f9dc93c001ea08b0bec43babcbce256bd6c18612347b6b4b87adde07"
+    },
+    {
+      "id": "k_atoza",
+      "file": "atoza.glb",
+      "url": "https://kura.vibe.co.jp/model3d/atoza_6e8aa8a6.glb",
+      "bytes": 384868,
+      "sha256": "6e8aa8a6dd93e062aaed4b6c165b2f7a51a9e2854eb48315b671be77e36780ea"
+    },
+    {
+      "id": "k_aun",
+      "file": "aun.glb",
+      "url": "https://kura.vibe.co.jp/model3d/aun_4ca789d8.glb",
+      "bytes": 372036,
+      "sha256": "4ca789d8bafafae3fcb7ddc41ec2494340331631259bc815ccaf68c0ccd26ceb"
+    },
+    {
+      "id": "k_tobari",
+      "file": "tobari.glb",
+      "url": "https://kura.vibe.co.jp/model3d/tobari_9b65e671.glb",
+      "bytes": 454728,
+      "sha256": "9b65e67171771142bf1dd0985014a2bd00e3f3949498ec1a6526150cc3c3d23c"
+    },
+    {
+      "id": "k_sasura",
+      "file": "sasura.glb",
+      "url": "https://kura.vibe.co.jp/model3d/sasura_1348441c.glb",
+      "bytes": 360052,
+      "sha256": "1348441c7164d59c1567c509971d52e85adaa35696e71bc90edd06314fa70b5f"
+    },
+    {
+      "id": "k_sekishusai",
+      "file": "sekishusai.glb",
+      "url": "https://kura.vibe.co.jp/model3d/sekishusai_d7c9805e.glb",
+      "bytes": 357952,
+      "sha256": "d7c9805eb4cc4a2bd0475aeb7b4a0f62c70ac8b1402a81ef7855cdac9c49c98c"
+    },
+    {
+      "id": "k_shiori",
+      "file": "shiori.glb",
+      "url": "https://kura.vibe.co.jp/model3d/shiori_acbe7e71.glb",
+      "bytes": 241592,
+      "sha256": "acbe7e711609e8311eb98fe16340d28561f24d9f8df526f5be49c978e1985af6"
+    }
+  ]
+}

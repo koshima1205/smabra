@@ -28,7 +28,21 @@ export interface StageInstance {
 export type BuildStage = (stage: StageDef, opts: { quality: Quality }) => StageInstance;
 
 /** 月蝕綺譚のキャラの ID（CNP と名前がかぶるオロチ・エマもあるので k_ を付ける） */
-export type KitanId = 'k_oto' | 'k_xiaolan' | 'k_orochi' | 'k_emma';
+export type KitanId =
+  | 'k_oto'
+  | 'k_xiaolan'
+  | 'k_orochi'
+  | 'k_emma'
+  | 'k_nemu'
+  | 'k_anne'
+  | 'k_karma'
+  | 'k_shiba'
+  | 'k_atoza'
+  | 'k_aun'
+  | 'k_tobari'
+  | 'k_sasura'
+  | 'k_sekishusai'
+  | 'k_shiori';
 
 /** キャラの ID（CNP 9体＋月蝕綺譚） */
 export type CnpId = 'leelee' | 'mitama' | 'narukami' | 'orochi' | 'luna' | 'yama' | 'makami' | 'towa' | 'setsuna' | KitanId;

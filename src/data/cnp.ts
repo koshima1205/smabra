@@ -27,6 +27,8 @@ export interface CnpDef {
   element?: string;
   /** 月蝕綺譚の忍術の名前（公式設定の名前をそのまま使う） */
   ninjutsu?: string;
+  /** 勝利画面の一言（公式の口調に合わせて本作で書いたもの） */
+  quotes?: string[];
 }
 
 export const CNP: CnpDef[] = [

@@ -2,18 +2,23 @@
   "name": "cnp-ranbu",
   "private": true,
   "version": "0.1.0",
-  "description": "忍乱舞 NINJA RANBU — CryptoNinja の非公式ファンメイド・プラットフォーム対戦ゲーム（キャラデータは NINJAMCP から MCP 経由で取得）",
+  "description": "CNP乱舞 — CryptoNinja Partners と月蝕綺譚のキャラが戦う非公式ファンメイドの 3D プラットフォーム対戦アクション（CNP のパートナー情報は NINJAMCP から MCP 経由で取得）",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/fetch-kitan.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/fetch-kitan.mjs",
     "build": "tsc --noEmit && vite build",
+    "prebuild:single": "node scripts/fetch-kitan.mjs",
     "build:single": "tsc --noEmit && vite build --mode single",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "pree2e": "node scripts/fetch-kitan.mjs",
     "e2e": "playwright test",
     "sync:roster": "tsx scripts/sync-roster.ts",
-    "mcp:ninja": "node node_modules/ninjamcp/dist/index.js"
+    "mcp:ninja": "node node_modules/ninjamcp/dist/index.js",
+    "sync:kitan": "node scripts/fetch-kitan.mjs"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

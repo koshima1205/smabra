@@ -48,13 +48,33 @@ describe('CNP roster with partner data from MCP', () => {
 
   it('adds the Luna Occulta spirits after the CNP 9, with their own home and element', () => {
     const kitan = FIGHTERS.filter((f) => f.series === 'kitan');
-    expect(kitan.map((f) => f.id)).toEqual(['k_oto', 'k_xiaolan', 'k_orochi', 'k_emma']);
+    expect(kitan.map((f) => f.id)).toEqual([
+      'k_oto',
+      'k_xiaolan',
+      'k_orochi',
+      'k_emma',
+      'k_nemu',
+      'k_anne',
+      'k_karma',
+      'k_shiba',
+      'k_atoza',
+      'k_aun',
+      'k_tobari',
+      'k_sasura',
+      'k_sekishusai',
+      'k_shiori',
+    ]);
     expect(FIGHTERS.slice(9).map((f) => f.id)).toEqual(kitan.map((f) => f.id));
     for (const f of kitan) {
       expect(f.partner, f.name).toBeNull();
-      expect(['甲賀', '伊賀', '風魔', '雑賀'], f.name).toContain(f.clan);
-      expect(['火', '水', '木', '金', '土'], f.name).toContain(f.element);
+      // 栞（道しるべの御霊）だけは里・五行を持たない
+      if (f.id !== 'k_shiori') {
+        expect(['甲賀', '伊賀', '風魔', '雑賀', '根の国'], f.name).toContain(f.clan);
+        expect(['火', '水', '木', '金', '土'], f.name).toContain(f.element);
+      }
       expect(f.ninjutsu, f.name).toBeTruthy();
+      // 勝利画面の一言がある
+      expect(f.quotes?.length, f.name).toBeGreaterThan(0);
     }
     // CNP と名前がかぶるオロチ・エマも ID は別
     expect(new Set(FIGHTERS.map((f) => f.id)).size).toBe(FIGHTERS.length);

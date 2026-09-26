@@ -396,6 +396,8 @@ export interface FighterSpec {
   /** 月蝕綺譚の五行・忍術の名前 */
   element?: string;
   ninjutsu?: string;
+  /** 勝利画面の一言 */
+  quotes?: string[];
   weaponKind: WeaponKind;
   jutsuKind: JutsuKind;
   stats: FighterStats;

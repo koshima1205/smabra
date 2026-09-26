@@ -278,6 +278,127 @@ const DESIGN: Record<CnpId, Design> = {
     rename: { nspec: '夢路・星こぼし', sspec: '一角突き', uspec: '蝕夢・角むすび', dspec: '幻術・夢の帳' },
     finalName: '奥義・幻月・一角の目醒め',
   },
+  // ネム（甲賀・水）: 絵筆 × 描いた鳥獣が飛び出す動植綵絵
+  k_nemu: {
+    weapon: 'brush',
+    weaponName: '絵筆',
+    jutsu: 'paint',
+    fx: 'ink',
+    stats: { weight: 86, run: 7.6, walk: 3.3, jumpV: 16.4, airJumps: 2, airSpeed: 5.2, gravity: 0.58, width: 50, height: 96, scale: 0.98 },
+    tune: (m) => {
+      for (const k of [...SMASHES, ...AERIALS] as MoveSlot[]) powerMove(m[k], 1.15, 3);
+    },
+    rename: { nspec: '動植綵絵', sspec: '旭日鳳凰図', uspec: '動植綵絵・鶴乗り', dspec: '絵の具ひと刷け' },
+    finalName: '奥義・鳥獣花木図屏風',
+  },
+  // 餡音（伊賀・木）: 団子の串を投げる
+  k_anne: {
+    weapon: 'dango',
+    weaponName: '団子串',
+    jutsu: 'kagebunshin',
+    fx: 'petal',
+    stats: { weight: 94, run: 8, walk: 3.4, jumpV: 16.2, airSpeed: 5.1, width: 52, height: 98, scale: 1 },
+    tune: (m) => {
+      for (const sp of m.nspec.spawns ?? []) sp.proj.draw = 'dango';
+      for (const k of [...SMASHES, 'ftilt', 'fair', 'bair', 'dashAtk'] as MoveSlot[]) powerMove(m[k], 1.17, 3);
+    },
+    rename: { nspec: '団子忍術・串千本', sspec: '団子忍術・串突き', uspec: '月見跳び', dspec: '団子忍術・身代わり' },
+    finalName: '奥義・団子秘奥義・月見尽くし',
+  },
+  // カルマ（風魔・火）: 大きすぎる鎖鎌 × 罪業の領域
+  k_karma: {
+    weapon: 'chain',
+    weaponName: '鎖鎌',
+    jutsu: 'realm',
+    fx: 'fire',
+    stats: { weight: 92, run: 7.7, walk: 3.3, jumpV: 16, airSpeed: 5, width: 50, height: 94, scale: 0.97 },
+    tune: (m) => {
+      // 鎖鎌は長いぶん出が遅いので、少し速く・強く
+      for (const k of [...SMASHES, ...AERIALS, 'ftilt', 'dashAtk'] as MoveSlot[]) {
+        shiftMove(m[k], -2);
+        powerMove(m[k], 1.14, 2);
+      }
+    },
+    rename: { nspec: '業独楽', sspec: 'お迎え鎖', uspec: '罪業昇り', dspec: '領域・罪業' },
+    finalName: '奥義・領域・罪業「緋月輪」',
+  },
+  // 柴（雑賀・水）: 体術 × 水遁
+  k_shiba: {
+    weapon: 'fist',
+    weaponName: '柴拳',
+    jutsu: 'suiton',
+    fx: 'water',
+    stats: { weight: 90, run: 9, dashInit: 9.6, walk: 3.7, jumpV: 16.6, airSpeed: 5.2, width: 50, height: 96, scale: 0.98 },
+    rename: { nspec: '水遁・渦車', sspec: '体術・瀬走り', uspec: '水柱駆け', dspec: '水遁・水鏡' },
+    finalName: '奥義・変化奥義・月夜の遠吠え',
+  },
+  // アトザ（風魔・金）: 鬼の金棒 × 逢魔刻
+  k_atoza: {
+    weapon: 'club',
+    weaponName: '鬼の金棒',
+    jutsu: 'omen',
+    fx: 'dark',
+    stats: { weight: 118, run: 7.3, walk: 3.1, jumpV: 15.4, gravity: 0.66, airSpeed: 4.8, width: 58, height: 104, scale: 1.06 },
+    tune: (m) => {
+      for (const k of SMASHES) powerMove(m[k], 1.06, 2);
+    },
+    rename: { nspec: '逢魔の黒炎', sspec: '逢魔刻・影踏み', uspec: '鬼鉄昇り', dspec: '鬼鉄・地均し' },
+    finalName: '奥義・逢魔刻・宵紅',
+  },
+  // アウン（風魔・土）: 背中の白絹 × 仁王の拳
+  k_aun: {
+    weapon: 'fist',
+    weaponName: '仁王拳',
+    jutsu: 'thread',
+    fx: 'normal',
+    stats: { weight: 110, run: 7.4, walk: 3.2, jumpV: 15.6, gravity: 0.64, airSpeed: 4.9, width: 56, height: 100, scale: 1.02 },
+    rename: { nspec: '白絹・振り初め', sspec: '白絹・手繰り', uspec: '白絹渡り', dspec: '阿吽・結び解き' },
+    finalName: '奥義・阿形転身・仁王撃',
+  },
+  // トバリ（根の国・水）: コウモリの翼 × 夜の帳
+  k_tobari: {
+    weapon: 'wings',
+    weaponName: '夜の翼',
+    jutsu: 'kagenui',
+    fx: 'dark',
+    stats: { weight: 84, gravity: 0.54, maxFall: 9.8, run: 7.8, airSpeed: 5.6, airAccel: 0.48, jumpV: 15.6, airJumps: 3, width: 50, height: 100, scale: 0.98 },
+    tune: (m) => {
+      for (const sp of m.nspec.spawns ?? []) sp.proj.draw = 'cloud';
+      for (const k of AERIALS) powerMove(m[k], 0.9, -2);
+    },
+    rename: { nspec: '帳・宵闇ノ幕', sspec: '帳走り', uspec: '夢路・浅キ眠リ', dspec: '帳・影牢' },
+    finalName: '奥義・帳奥義・常夜ノ庇護',
+  },
+  // サスラ（根の国・金）: 神事の大鎌 × 黄泉送り
+  k_sasura: {
+    weapon: 'bigblade',
+    weaponName: '神事の大鎌',
+    jutsu: 'nirvana',
+    fx: 'light',
+    stats: { weight: 98, run: 7.6, walk: 3.3, jumpV: 16, airSpeed: 5, width: 52, height: 100, scale: 1 },
+    rename: { nspec: '邪気眼・封印緩メ', sspec: '神事・一ノ鎌', uspec: '黄泉路昇り', dspec: '黄泉送り' },
+    finalName: '奥義・封印奥義・左眼開眼',
+  },
+  // 石舟斎（伊賀・火）: 刀を持たない剣聖 × 無刀取り
+  k_sekishusai: {
+    weapon: 'fist',
+    weaponName: '無刀',
+    jutsu: 'mutodori',
+    fx: 'slash',
+    stats: { weight: 96, run: 8.2, walk: 3.6, jumpV: 16.2, airSpeed: 5.2, width: 50, height: 100, scale: 1 },
+    rename: { nspec: '無刀・飛燕', sspec: '縮地', uspec: '昇竜', dspec: '無刀取り' },
+    finalName: '奥義・無刀の極み',
+  },
+  // 栞（道しるべ）: 式書 × 御霊を呼ぶ
+  k_shiori: {
+    weapon: 'scroll',
+    weaponName: '式書',
+    jutsu: 'kuchiyose',
+    fx: 'light',
+    stats: { weight: 82, gravity: 0.56, run: 7.4, walk: 3.2, jumpV: 15.8, airJumps: 2, airSpeed: 5.2, width: 50, height: 96, scale: 0.97 },
+    rename: { nspec: '式書・御霊呼び', sspec: '式書・頁繰り', uspec: '式書・渡り', dspec: '式書・封じ' },
+    finalName: '奥義・第一夜',
+  },
 };
 
 const FX_COLOR: Record<string, string> = {
@@ -383,6 +504,7 @@ export function buildSpec(c: CnpDef): FighterSpec {
     series: c.series ?? 'cnp',
     element: c.element,
     ninjutsu: c.ninjutsu,
+    quotes: c.quotes,
     weaponKind: d.weapon,
     jutsuKind: d.jutsu,
     stats,

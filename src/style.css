@@ -395,8 +395,8 @@ kbd {
 
 .grid {
   display: grid;
-  /* CNP 9体＋月蝕綺譚 4体＋おまかせ = 14 枠を 2 段に */
-  grid-template-columns: repeat(7, minmax(0, min(150px, 16.5vh)));
+  /* CNP 9体＋月蝕綺譚 14体＋おまかせ = 24 枠を 3 段に */
+  grid-template-columns: repeat(8, minmax(0, min(112px, 11vh)));
   justify-content: center;
   gap: 8px;
 }
@@ -708,27 +708,34 @@ kbd {
 
 .ready {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
   top: 50%;
-  transform: translateY(-50%) skewY(-3deg);
-  background: linear-gradient(90deg, rgba(199, 48, 42, 0), rgba(199, 48, 42, 0.95) 20%, rgba(199, 48, 42, 0.95) 80%, rgba(199, 48, 42, 0));
-  padding: 10px;
+  transform: translate(-50%, -50%);
+  min-width: min(520px, 90vw);
+  background: rgba(16, 14, 28, 0.94);
+  border: 1px solid rgba(242, 193, 78, 0.55);
+  border-radius: 10px;
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.7),
+    0 0 0 4px rgba(242, 193, 78, 0.08);
+  padding: 14px 28px 12px;
   text-align: center;
   font-family: var(--display);
-  font-size: clamp(22px, 4vw, 40px);
-  letter-spacing: 0.1em;
+  font-size: clamp(22px, 3.6vw, 36px);
+  letter-spacing: 0.3em;
+  color: var(--gold-2);
   cursor: pointer;
   z-index: 5;
-  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
 }
 
 .ready small {
   display: block;
+  margin-top: 4px;
   font-family: var(--font);
   font-size: 13px;
   letter-spacing: 0.05em;
-  opacity: 0.9;
+  color: var(--text);
+  opacity: 0.85;
 }
 
 .hint {
@@ -1079,4 +1086,112 @@ kbd {
   .blink {
     animation: none;
   }
+}
+
+/* ───────── 月蝕綺譚の御霊（公式トンマナ「宵闇に金」: 宵闇藍の地・金泥の細い線・月白の本文・明朝の見出し・小さめの角丸） ───────── */
+:root {
+  --yoiyami: #131320;
+  --yoiyami-hi: #1b1b2e;
+  --kindei: #d9a94c;
+  --kindei-hi: #f0ce7e;
+  --geppaku: #e8e4d8;
+  --kitan-panel: #100e1c;
+  --kitan-sub: #9d93b5;
+  --mincho: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
+}
+
+.card.kitan {
+  border-radius: 10px;
+  border: 1px solid rgba(217, 169, 76, 0.45);
+}
+
+.card.kitan:hover {
+  border-color: var(--kindei-hi);
+}
+
+.card.kitan .nm {
+  font-family: var(--mincho);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--kindei-hi);
+  background: linear-gradient(180deg, rgba(19, 19, 32, 0), rgba(19, 19, 32, 0.92));
+}
+
+.card.kitan .nm small {
+  color: var(--kitan-sub);
+  opacity: 1;
+  letter-spacing: 0.02em;
+}
+
+.slot.kitan {
+  background: radial-gradient(ellipse at 50% -40%, #24203e, #181432 42%, var(--kitan-panel));
+  border-color: rgba(217, 169, 76, 0.4);
+  border-radius: 10px;
+}
+
+.slot.kitan .cname {
+  font-family: var(--mincho);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--kindei-hi);
+}
+
+.slot.kitan .meta {
+  font-family: var(--mincho);
+  font-weight: 500;
+  color: var(--geppaku);
+}
+
+.slot.kitan .partner {
+  color: var(--kindei);
+}
+
+.slot.kitan .por {
+  background: var(--yoiyami);
+  border-radius: 9px;
+}
+
+.slot.kitan .tag {
+  background: rgba(217, 169, 76, 0.14);
+  color: var(--kindei-hi);
+}
+
+.slot.kitan .bar i {
+  background: linear-gradient(90deg, #95713a, var(--kindei-hi));
+}
+
+.winner.kitan .big {
+  border: 1px solid var(--kindei);
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 30%, #24203e, var(--yoiyami) 74%);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.7),
+    0 0 34px rgba(240, 206, 126, 0.25);
+}
+
+.winner.kitan .wtxt .lbl {
+  font-family: var(--mincho);
+  color: var(--kindei);
+}
+
+.winner.kitan .wtxt .wn {
+  font-family: var(--mincho);
+  font-weight: 800;
+  color: var(--kindei-hi);
+}
+
+/* 勝利の一言（羽二重: 縁なし、影と面の明度差で浮かせる吹き出し） */
+.quote {
+  margin-top: 14px;
+  max-width: min(460px, 86vw);
+  padding: 12px 18px;
+  border-radius: 10px;
+  background: rgba(24, 22, 38, 0.95);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+  font-family: var(--mincho);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  color: var(--geppaku);
 }
