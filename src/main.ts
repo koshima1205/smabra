@@ -1,7 +1,7 @@
 import './style.css';
 import { audio } from './core/audio';
 import { InputManager } from './core/input';
-import { buildCharacter } from './render3d/characters';
+import { buildCharacter, preloadKitan } from './render3d/characters';
 import { initSnapshots } from './render3d/snapshots';
 import { buildStage } from './render3d/stages';
 import { setWorld, World3D } from './render3d/world';
@@ -51,7 +51,8 @@ window.addEventListener('keydown', unlock);
 
 const input = new InputManager();
 const app = new App(input, ui, touchEl);
-app.go(new TitleScene(app));
+// 月蝕綺譚の公式モデル（GLB）を読み込んでからタイトルへ（読めなかったキャラは仮の形で表示）
+void preloadKitan().then(() => app.go(new TitleScene(app)));
 
 // 固定 60Hz でロジック、描画は毎フレーム
 const STEP = 1000 / 60;

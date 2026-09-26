@@ -7,8 +7,8 @@ describe('CNP roster with partner data from MCP', () => {
   it('has the 9 CNP characters, each linked to its partner ninja synced from NINJAMCP', () => {
     expect(ROSTER_META.mcp.server).toBe('NINJAMCP');
     expect(ROSTER_META.mcp.tools).toEqual(expect.arrayContaining(['get_character', 'search_lore', 'get_worldview']));
-    expect(FIGHTERS.map((f) => f.id)).toEqual(['leelee', 'mitama', 'narukami', 'orochi', 'luna', 'yama', 'makami', 'towa', 'setsuna']);
-    for (const f of FIGHTERS) {
+    expect(FIGHTERS.filter((f) => f.series === 'cnp').map((f) => f.id)).toEqual(['leelee', 'mitama', 'narukami', 'orochi', 'luna', 'yama', 'makami', 'towa', 'setsuna']);
+    for (const f of FIGHTERS.filter((x) => x.series === 'cnp')) {
       const def = CNP.find((c) => c.id === f.id)!;
       expect(f.partner?.name, f.name).toBe(def.partner);
       expect(f.clan, f.name).toBe(f.partner?.clan);
@@ -46,8 +46,23 @@ describe('CNP roster with partner data from MCP', () => {
     }
   });
 
+  it('adds the Luna Occulta spirits after the CNP 9, with their own home and element', () => {
+    const kitan = FIGHTERS.filter((f) => f.series === 'kitan');
+    expect(kitan.map((f) => f.id)).toEqual(['k_oto', 'k_xiaolan', 'k_orochi', 'k_emma']);
+    expect(FIGHTERS.slice(9).map((f) => f.id)).toEqual(kitan.map((f) => f.id));
+    for (const f of kitan) {
+      expect(f.partner, f.name).toBeNull();
+      expect(['甲賀', '伊賀', '風魔', '雑賀'], f.name).toContain(f.clan);
+      expect(['火', '水', '木', '金', '土'], f.name).toContain(f.element);
+      expect(f.ninjutsu, f.name).toBeTruthy();
+    }
+    // CNP と名前がかぶるオロチ・エマも ID は別
+    expect(new Set(FIGHTERS.map((f) => f.id)).size).toBe(FIGHTERS.length);
+  });
+
   it('gives each character its own kit and body', () => {
-    const kits = new Set(FIGHTERS.map((f) => `${f.weaponKind}/${f.jutsuKind}`));
+    // 得物と忍術の型が同じでも（拳の於兎とリーリーなど）、必殺ワザまで同じキャラはいない
+    const kits = new Set(FIGHTERS.map((f) => `${f.weaponKind}/${f.jutsuKind}/${f.moves.nspec.name}`));
     expect(kits.size).toBe(FIGHTERS.length);
     const names = new Set(FIGHTERS.map((f) => f.moves.nspec.name));
     expect(names.size).toBe(FIGHTERS.length);

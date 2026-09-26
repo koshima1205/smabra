@@ -27,8 +27,11 @@ export interface StageInstance {
 
 export type BuildStage = (stage: StageDef, opts: { quality: Quality }) => StageInstance;
 
-/** CNP キャラの ID */
-export type CnpId = 'leelee' | 'mitama' | 'narukami' | 'orochi' | 'luna' | 'yama' | 'makami' | 'towa' | 'setsuna';
+/** 月蝕綺譚のキャラの ID（CNP と名前がかぶるオロチ・エマもあるので k_ を付ける） */
+export type KitanId = 'k_oto' | 'k_xiaolan' | 'k_orochi' | 'k_emma';
+
+/** キャラの ID（CNP 9体＋月蝕綺譚） */
+export type CnpId = 'leelee' | 'mitama' | 'narukami' | 'orochi' | 'luna' | 'yama' | 'makami' | 'towa' | 'setsuna' | KitanId;
 
 /**
  * モデルの姿勢。2D 版の Pose（src/render/rig.ts）と同じ意味の角度（ラジアン）を受け取る。

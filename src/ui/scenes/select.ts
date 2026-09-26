@@ -52,7 +52,11 @@ export class SelectScene implements Scene {
         { class: 'topbar' },
         h('button', { class: 'btn small', onclick: () => this.back() }, '◀ タイトル'),
         h('h1', {}, 'キャラクター選択'),
-        h('span', { class: 'sub-title' }, `CNP ${FIGHTERS.length}体 — 性能はパートナー忍者の忍術・得物（MCP）から`),
+        h(
+          'span',
+          { class: 'sub-title' },
+          `CNP ${FIGHTERS.filter((f) => f.series === 'cnp').length}体＋月蝕綺譚 ${FIGHTERS.filter((f) => f.series === 'kitan').length}体 — CNP の性能はパートナー忍者の忍術・得物（MCP）から`,
+        ),
         h('div', { class: 'spacer' }),
         h(
           'div',
@@ -275,7 +279,15 @@ export class SelectScene implements Scene {
               spec.partner.weapon ? ` ・ 得物「${spec.partner.weapon}」` : '',
               spec.partnerInMcp ? h('span', { class: 'mcp', title: 'NINJAMCP の忍者設定にパートナーとして記載' }, 'MCP') : '',
             )
-          : '',
+          : spec.series === 'kitan'
+            ? h(
+                'div',
+                { class: 'partner' },
+                h('span', { style: `color:${CLAN_COLOR[spec.clan] ?? '#ccc'}` }, '●'),
+                ` 月蝕綺譚の御霊（${spec.clan}・${spec.element ?? ''}）`,
+                spec.ninjutsu ? ` ・ 忍術「${spec.ninjutsu}」` : '',
+              )
+            : '',
         h('div', { class: 'tags' }, ...spec.tags.map((t) => h('span', { class: 'tag' }, t))),
         h(
           'div',

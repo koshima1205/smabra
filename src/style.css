@@ -395,7 +395,8 @@ kbd {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, min(150px, 16.5vh)));
+  /* CNP 9体＋月蝕綺譚 4体＋おまかせ = 14 枠を 2 段に */
+  grid-template-columns: repeat(7, minmax(0, min(150px, 16.5vh)));
   justify-content: center;
   gap: 8px;
 }

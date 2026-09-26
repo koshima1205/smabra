@@ -20,6 +20,13 @@ export interface CnpDef {
   /** テーマ色（UI・マフラー） */
   color: string;
   blurb: string;
+  /** 出てくる作品（省略時は CNP） */
+  series?: 'cnp' | 'kitan';
+  /** 月蝕綺譚の御霊の里と五行（CNP はパートナーの忍者から決まるので省略） */
+  clan?: string;
+  element?: string;
+  /** 月蝕綺譚の忍術の名前（公式設定の名前をそのまま使う） */
+  ninjutsu?: string;
 }
 
 export const CNP: CnpDef[] = [

@@ -1,4 +1,5 @@
 import { CNP, type CnpDef } from '../data/cnp';
+import { KITAN } from '../data/kitan';
 import data from '../data/roster.generated.json';
 import type { CnpId } from '../render3d/types';
 import { hb, hit, mv, powerMove, proj, scaleMove, shiftMove } from './moves/dsl';
@@ -215,6 +216,68 @@ const DESIGN: Record<CnpId, Design> = {
     rename: { nspec: '刹那・爪飛ばし', sspec: '刹那・瞬身斬り', uspec: '刹那・瞬歩', dspec: '刹那・見切り' },
     finalName: '奥義・刹那',
   },
+
+  // ───── 月蝕綺譚（ワザの名前は公式の忍術から。性能は本作オリジナル） ─────
+  // 於兎（甲賀・土）: 兎の拳で地面ごと殴る重い一撃
+  k_oto: {
+    weapon: 'fist',
+    weaponName: '兎拳',
+    jutsu: 'titan',
+    fx: 'metal',
+    stats: { weight: 106, run: 7.6, walk: 3.3, jumpV: 17, airJumpV: 15.6, gravity: 0.64, airSpeed: 5, width: 56, height: 96, scale: 1.02 },
+    tune: (m) => {
+      for (const k of [...SMASHES, 'ftilt', 'fair', 'dashAtk'] as MoveSlot[]) powerMove(m[k], 1.12, 2);
+      for (const k of AERIALS) shiftMove(m[k], -1);
+    },
+    rename: { nspec: 'うさぎどーん！', sspec: 'うさぎどっかーん！', uspec: '月兎跳び', dspec: '月兎・地ならし' },
+    finalName: '奥義・月兎・満月どーん！',
+  },
+  // シャオラン（甲賀・土）: 太極拳 × 口寄せ・リーリー
+  k_xiaolan: {
+    weapon: 'fist',
+    weaponName: '太極拳',
+    jutsu: 'kuchiyose',
+    fx: 'metal',
+    stats: { weight: 98, run: 7.8, walk: 3.4, jumpV: 16, airSpeed: 5, width: 52, height: 100, scale: 1 },
+    specials: () => ({
+      nspec: charger('口寄せ・リーリー', 'metal', 'creature', { ground: true, speed: 8.5, life: 50, dmg: 9 }),
+      sspec: lunge('肩ならべ双掌打', 'metal', { dmg: 8, speed: 12, multi: true }),
+      uspec: rise('点心跳び', 'wind', { vy: -20 }),
+      dspec: counter('太極・化勁', 'metal', 'taichiHit'),
+      extra: { taichiHit: counterHit('太極・発勁', 'metal', 10) },
+    }),
+    finalName: '奥義・大きく描かれた頁',
+  },
+  // オロチ（風魔・水）: 口から抜く黒鉄の剣「叢雲」× 水
+  k_orochi: {
+    weapon: 'katana',
+    weaponName: '叢雲',
+    jutsu: 'suiton',
+    fx: 'water',
+    stats: { weight: 96, run: 8, walk: 3.5, jumpV: 16.2, airSpeed: 5.2, width: 50, height: 100, scale: 1 },
+    tune: (m) => {
+      // 刀は出が早く鋭く
+      for (const k of [...SMASHES, ...AERIALS, 'ftilt', 'utilt', 'dashAtk'] as MoveSlot[]) {
+        shiftMove(m[k], -1);
+        powerMove(m[k], 1.12, 2);
+      }
+    },
+    rename: { nspec: '水遁・白露', sspec: '鎌首', uspec: '叢雲抜き放ち', dspec: '水鏡の術' },
+    finalName: '奥義・大蛇顕現・八重の大波',
+  },
+  // エマ（甲賀・金）: 一角槍 × 夢の幻術
+  k_emma: {
+    weapon: 'bigblade',
+    weaponName: '一角槍',
+    jutsu: 'illusion',
+    fx: 'light',
+    stats: { weight: 88, run: 8.2, walk: 3.6, jumpV: 16.8, airJumpV: 15.6, airJumps: 2, airSpeed: 5.3, width: 50, height: 100, scale: 1 },
+    tune: (m) => {
+      for (const k of SMASHES) powerMove(m[k], 0.94, -2);
+    },
+    rename: { nspec: '夢路・星こぼし', sspec: '一角突き', uspec: '蝕夢・角むすび', dspec: '幻術・夢の帳' },
+    finalName: '奥義・幻月・一角の目醒め',
+  },
 };
 
 const FX_COLOR: Record<string, string> = {
@@ -316,7 +379,10 @@ export function buildSpec(c: CnpDef): FighterSpec {
     species: c.species,
     partner,
     partnerInMcp: (entry?.loreMention.length ?? 0) > 0,
-    clan: partner?.clan ?? '',
+    clan: partner?.clan ?? c.clan ?? '',
+    series: c.series ?? 'cnp',
+    element: c.element,
+    ninjutsu: c.ninjutsu,
     weaponKind: d.weapon,
     jutsuKind: d.jutsu,
     stats,
@@ -329,7 +395,8 @@ export function buildSpec(c: CnpDef): FighterSpec {
   };
 }
 
-export const FIGHTERS: FighterSpec[] = CNP.map(buildSpec);
+/** 選べるキャラ（CNP 9体のあとに月蝕綺譚） */
+export const FIGHTERS: FighterSpec[] = [...CNP, ...KITAN].map(buildSpec);
 
 export function fighterById(id: string): FighterSpec {
   return FIGHTERS.find((f) => f.id === id) ?? FIGHTERS[0];

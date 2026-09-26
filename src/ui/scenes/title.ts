@@ -202,7 +202,7 @@ export class TitleScene implements Scene {
         h(
           'p',
           {},
-          `CNP の ${FIGHTERS.length} キャラは、それぞれ CryptoNinja の忍者のパートナーです。Model Context Protocol サーバー `,
+          `CNP の ${FIGHTERS.filter((f) => f.series === 'cnp').length} キャラは、それぞれ CryptoNinja の忍者のパートナーです。Model Context Protocol サーバー `,
           h('b', {}, `${meta.mcp.server} ${meta.mcp.version ?? ''}`),
           ' に MCP クライアントとして接続し、',
           h('code', {}, 'get_character / search_lore / get_worldview'),
@@ -213,9 +213,21 @@ export class TitleScene implements Scene {
         h(
           'ul',
           {},
-          ...FIGHTERS.map((f) =>
+          ...FIGHTERS.filter((f) => f.series === 'cnp').map((f) =>
             h('li', {}, h('b', {}, f.name), `（${f.species}）← ${f.partner?.name ?? '?'}・${f.partner?.clan ?? ''}：${f.partner?.ninjutsu ?? '-'} / ${f.partner?.weapon ?? '-'}`, f.partnerInMcp ? ' [MCP]' : ''),
           ),
+        ),
+        h('h3', {}, '月蝕綺譚 -Luna Occulta-'),
+        h(
+          'p',
+          {},
+          'CryptoNinja 外伝「月蝕綺譚」の御霊も参戦しています（',
+          FIGHTERS.filter((f) => f.series === 'kitan')
+            .map((f) => `${f.name}（${f.clan}・${f.element ?? ''}）`)
+            .join('、'),
+          '）。3D モデルは月蝕綺譚の二次創作「3Dの間」で配布されている公式モデル（ゲーム版 GLB）を、',
+          h('a', { href: 'https://vibe.co.jp/luna-occulta/fanworks', target: '_blank', rel: 'noopener' }, '二次創作ガイドライン'),
+          'に沿って組み込み、このゲームの骨格に付け直して動かしています。里・五行・忍術の名前は公式の正典シートの公開情報から、説明文と性能は本作オリジナルです。',
         ),
         h('h3', {}, 'データ出典'),
         h('p', {}, h('a', { href: meta.credit.url, target: '_blank', rel: 'noopener' }, meta.credit.title), `（${meta.credit.author}）— NINJAMCP 経由。MCP に載っていないパートナー関係（ルナ・マカミ・トワ・セツナ）は CNP 公式の公開情報より。`),
@@ -224,7 +236,12 @@ export class TitleScene implements Scene {
           'ul',
           {},
           h('li', {}, 'CNP（CryptoNinja Partners）・CryptoNinja は Ninja DAO / イケハヤ氏による IP です。本作は非公式・非営利のファンメイド作品で、公式とは関係ありません。二次創作の範囲は公式の利用ガイドラインをご確認ください。'),
-          h('li', {}, 'キャラクターの 3D モデル・ステージはすべて本作オリジナルの手続き生成です（公式イラストは使用・同梱していません）。'),
+          h('li', {}, 'CNP 9体の 3D モデル・ステージは本作オリジナルの手続き生成です（公式イラストは使用・同梱していません）。'),
+          h(
+            'li',
+            {},
+            '月蝕綺譚 -Luna Occulta-（Studio VIBE）の御霊の 3D モデルは公式の配布モデルです。本作は月蝕綺譚の公式とも関係のない非公式ファンメイドで、モデル単体の再配布はできません。#月蝕綺譚',
+          ),
           h('li', {}, 'NINJAMCP（MIT License）: github.com/omikirin/mcp ／ three.js（MIT License）'),
           h('li', {}, 'ゲームのプログラム・演出・効果音はすべて本作オリジナル（手続き生成）です。'),
         ),

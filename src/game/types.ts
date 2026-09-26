@@ -389,8 +389,13 @@ export interface FighterSpec {
   partner: PartnerNinja | null;
   /** パートナー関係が MCP（忍者のプロフィール）に記載されているか */
   partnerInMcp: boolean;
-  /** パートナーの忍者のクラン */
+  /** パートナーの忍者のクラン（月蝕綺譚は御霊自身の里） */
   clan: string;
+  /** 出てくる作品 */
+  series: 'cnp' | 'kitan';
+  /** 月蝕綺譚の五行・忍術の名前 */
+  element?: string;
+  ninjutsu?: string;
   weaponKind: WeaponKind;
   jutsuKind: JutsuKind;
   stats: FighterStats;

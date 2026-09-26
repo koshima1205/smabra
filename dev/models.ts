@@ -7,7 +7,7 @@
  * ?thumbs=1 で描画側のアイコン（顔・上半身・全身）をこのモデルで作って並べる。
  */
 import * as THREE from 'three';
-import { buildCharacter, CNP_MODEL_IDS } from '../src/render3d/characters';
+import { buildCharacter, CNP_MODEL_IDS, preloadKitan } from '../src/render3d/characters';
 import { Ribbon3D } from '../src/render3d/ribbon';
 import { characterThumb, initSnapshots, type ThumbMode } from '../src/render3d/snapshots';
 import type { CharacterModel, CnpId, ModelPose } from '../src/render3d/types';
@@ -96,6 +96,7 @@ const POSES: Record<string, (t: number) => Sample> = {
 };
 const BRIEF = ['idle', 'run', 'jump', 'jab', 'fsmash', 'usmash', 'dair', 'hurt', 'down', 'crouch', 'shield', 'spin'];
 
+await preloadKitan();
 const qs = new URLSearchParams(location.search);
 const poseName = qs.get('pose') ?? 'cycle';
 const one = qs.get('id') as CnpId | null;

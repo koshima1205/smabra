@@ -1,4 +1,6 @@
+import { placeholderCharacter } from '../placeholder';
 import type { BuildCharacter, CnpId } from '../types';
+import { buildKitan, isKitanId, KITAN_IDS } from './kitan';
 import { buildLeeLee } from './leelee';
 import { buildLuna } from './luna';
 import { buildMakami } from './makami';
@@ -9,11 +11,14 @@ import { buildSetsuna } from './setsuna';
 import { buildTowa } from './towa';
 import { buildYama } from './yama';
 
-/** CNP のモデル一覧（選択画面などの並び順） */
-export const CNP_MODEL_IDS: CnpId[] = ['leelee', 'mitama', 'narukami', 'orochi', 'luna', 'yama', 'makami', 'towa', 'setsuna'];
+/** モデル一覧（選択画面などの並び順）。CNP 9体のあとに月蝕綺譚 */
+export const CNP_MODEL_IDS: CnpId[] = ['leelee', 'mitama', 'narukami', 'orochi', 'luna', 'yama', 'makami', 'towa', 'setsuna', ...KITAN_IDS];
 
-/** CNP キャラの 3D モデルを作る（知らない ID は例外） */
+export { preloadKitan } from './kitan';
+
+/** キャラの 3D モデルを作る（知らない ID は例外。月蝕綺譚のモデルが読み込み前なら仮の形） */
 export const buildCharacter: BuildCharacter = (id, opts = {}) => {
+  if (isKitanId(id)) return buildKitan(id, opts) ?? placeholderCharacter(id, opts);
   switch (id) {
     case 'leelee':
       return buildLeeLee(opts);
